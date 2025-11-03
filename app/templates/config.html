@@ -2,7 +2,6 @@
 {% block content %}
 <div class="container mt-4">
     <h2>Конфигурация</h2>
-
     <ul class="nav nav-tabs" id="configTabs">
         <li class="nav-item">
             <a class="nav-link active" data-bs-toggle="tab" href="#paths">Paths (INI)</a>
@@ -10,11 +9,18 @@
         <li class="nav-item">
             <a class="nav-link" data-bs-toggle="tab" href="#connections">Connections (JSON)</a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#laser">Laser</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#polychromators">Polychromators</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#caen">Caen</a>
+        </li>
     </ul>
 
     <div class="tab-content mt-3">
-
-        <!-- ===== INI CONFIG ===== -->
         <div class="tab-pane fade show active" id="paths">
             {% for section, values in ini_data.items() %}
             <div class="card mb-3">
@@ -45,7 +51,58 @@
             <form action="/config/update_json" method="post">
                 <label class="form-label">Редактировать JSON:</label>
                 <textarea name="content" rows="20" class="form-control" style="font-family: monospace;">{{ json_data | tojson(indent=2) }}</textarea>
-                <button type="submit" class="btn btn-success mt-2">Сохранить JSON</button>
+
+                <div class="d-flex gap-2 mt-2 align-items-center">
+                    <button type="submit" class="btn btn-success">Сохранить</button>
+
+                    <div class="d-flex gap-2 align-items-center ms-3">
+                        <span>Сохранить как:</span>
+                        <input type="text" name="filename" placeholder="имя_файла" class="form-control"
+                               style="width: 200px;">
+                        <button type="submit" formaction="/config/save_as_json" class="btn btn-outline-primary">
+                            Сохранить
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- ===== LASER TAB ===== -->
+        <div class="tab-pane fade" id="laser">
+            <h5>Laser configuration</h5>
+            <p>Поля для энергии, длины волны и прочего.</p>
+        </div>
+
+        <!-- ===== POLYCHROMATORS TAB ===== -->
+        <div class="tab-pane fade" id="polychromators">
+            <h5>Polychromators</h5>
+            <p>Тут появится интерфейс для добавления и редактирования полихроматоров.</p>
+        </div>
+
+        <!-- ===== CAEN TAB ===== -->
+        <div class="tab-pane fade" id="caen">
+            <h5>CAEN Channel Mapping</h5>
+            <form id="caen-form" method="post" action="/save_caen_connections">
+                <div style="display: flex; flex-direction: column; width: 320px; gap: 6px;">
+                    {% for i in range(1, 17) %}
+                    <div class="border rounded p-2 d-flex align-items-center justify-content-between">
+                        <span class="fw-bold">Ch {{ i }}</span>
+                        <select name="poly_{{ i }}" class="form-select form-select-sm" style="width: 120px;">
+                            <option value="">-- Poly --</option>
+                            {% for poly in ['Poly1','Poly2','Poly3','Poly4','Poly5'] %}
+                            <option value="{{ poly }}">{{ poly }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="ch_{{ i }}" class="form-select form-select-sm" style="width: 70px;">
+                            <option value="">-- Ch --</option>
+                            {% for ch in range(1,6) %}
+                            <option value="{{ ch }}">{{ ch }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Сохранить Connections</button>
             </form>
         </div>
 

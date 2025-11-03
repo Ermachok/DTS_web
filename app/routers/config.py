@@ -7,6 +7,8 @@ from app.services.config_manager import (
     load_json_config,
     save_json_config
 )
+from pathlib import Path
+import json
 
 router = APIRouter(prefix="/config", tags=["config"])
 
@@ -39,10 +41,55 @@ async def update_ini(
 
 @router.post("/update_json")
 async def update_json(content: str = Form(...)):
-    import json
     try:
         parsed = json.loads(content)
         save_json_config(JSON_PATH, parsed)
     except json.JSONDecodeError:
         print("Ошибка парсинга JSON, изменения не сохранены.")
     return RedirectResponse("/config", status_code=303)
+
+
+@router.post("/save_as_json")
+async def save_as_json(
+        content: str = Form(...),
+        filename: str = Form(...)
+):
+    if not filename.strip():
+        return await update_json(content)
+
+    try:
+        parsed = json.loads(content)
+
+        filename = filename.strip()
+        if not filename.endswith('.json'):
+            filename += '.json'
+
+        config_dir = Path("config")
+        config_dir.mkdir(exist_ok=True)
+
+        new_path = config_dir / filename
+        save_json_config(str(new_path), parsed)
+
+        print(f"Файл успешно сохранен как: {filename}")
+
+    except json.JSONDecodeError as e:
+        print(f"Ошибка парсинга JSON: {e}")
+    except Exception as e:
+        print(f"Ошибка при сохранении файла: {e}")
+
+    return RedirectResponse("/config", status_code=303)
+
+
+@router.get("/laser")
+async def laser_page(request: Request):
+    return templates.TemplateResponse("config.html", {"request": request, "page": "laser"})
+
+
+@router.get("/polychromators")
+async def polychromators_page(request: Request):
+    return templates.TemplateResponse("config.html", {"request": request, "page": "polychromators"})
+
+
+@router.get("/caen")
+async def caen_page(request: Request):
+    return templates.TemplateResponse("config.html", {"request": request, "page": "caen"})

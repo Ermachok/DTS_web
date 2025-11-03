@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Laser Control Panel</h2>
+
+    <!-- Кнопки управления -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <button class="btn btn-success w-100" onclick="sendCommand('arm')">ARM</button>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <button class="btn btn-warning w-100" onclick="sendCommand('disarm')">DISARM</button>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <button class="btn btn-danger w-100" onclick="sendCommand('fire')">FIRE</button>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <button class="btn btn-secondary w-100" onclick="sendCommand('stop')">STOP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Чекбокс Ready -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="readyCheckbox" onchange="toggleReady(this.checked)">
+                <label class="form-check-label" for="readyCheckbox">
+                    <strong>Ready</strong>
+                </label>
+            </div>
+            <small class="form-text text-muted">
+                Start listening for UDP packets on port 8888
+            </small>
+        </div>
+    </div>
+
+    <!-- Окно сообщений -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Messages</h5>
+        </div>
+        <div class="card-body">
+            <div id="messageWindow"
+                 style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background-color: #f8f9fa; border-radius: 5px; font-family: monospace; font-size: 14px;">
+                {% for message in messages %}
+                <div>{{ message }}</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Тестовые кнопки -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Test UDP Packets</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <button class="btn btn-outline-primary w-100" onclick="sendTestPacket(255)">Send START (255)
+                    </button>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <button class="btn btn-outline-warning w-100" onclick="sendTestPacket(127)">Send COUNTDOWN (127)
+                    </button>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <button class="btn btn-outline-secondary w-100" onclick="sendTestPacket(100)">Send TEST (100)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<script>
+    async function updateMessages() {
+        try {
+            const response = await fetch('/laser/messages');
+            const messages = await response.json();
+
+            const messageWindow = document.getElementById('messageWindow');
+            messageWindow.innerHTML = '';
+
+            messages.forEach(msg => {
+                const div = document.createElement('div');
+                div.textContent = msg;
+                messageWindow.appendChild(div);
+            });
+
+            messageWindow.scrollTop = messageWindow.scrollHeight;
+        } catch (error) {
+            console.error('Error updating messages');
+        }
+    }
+
+    async function sendCommand(command) {
+        await fetch(`/laser/${command}`, { method: 'POST' });
+        await updateMessages();
+    }
+
+    async function toggleReady(isReady) {
+        const formData = new FormData();
+        formData.append('ready', isReady);
+        await fetch('/laser/toggle-ready', { method: 'POST', body: formData });
+        await updateMessages();
+    }
+
+    async function sendTestPacket(value) {
+        await fetch('/laser/send-test-packet', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ packet_value: value })
+        });
+        await updateMessages();
+    }
+
+    // Обновляем сообщения каждую секунду
+    setInterval(updateMessages, 1000);
+</script>
+{% endblock %}
