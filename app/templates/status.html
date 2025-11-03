@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Управление и загрузка файлов</h3>
+
+<form action="/status/upload" method="post" enctype="multipart/form-data" class="mt-3">
+    <input type="file" name="file" class="form-control" required>
+    <button type="submit" class="btn btn-primary mt-2">Загрузить</button>
+</form>
+
+<h5 class="mt-4">Статусы:</h5>
+<ul class="list-group">
+    <li class="list-group-item">MSG файл: {{ status.msg_file or '—' }}</li>
+    <li class="list-group-item">CSV файл: {{ status.csv_file or '—' }}</li>
+    <li class="list-group-item">JSON файл: {{ status.json_file or '—' }}</li>
+    <li class="list-group-item">Выполнение: {{ 'Да' if status.processing else 'Нет' }}</li>
+    <li class="list-group-item">Результат готов: {{ 'Да' if status.ready else 'Нет' }}</li>
+</ul>
+{% endblock %}

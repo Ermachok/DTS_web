@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Графики и вычисления</h3>
+
+<div id="graph1" class="mt-4"></div>
+<div id="graph2" class="mt-4"></div>
+<div id="graph3" class="mt-4"></div>
+<div id="graph4" class="mt-4"></div>
+
+<script>
+    // Пример: заглушка для теста
+    const t = Array.from({length: 50}, (_, i) => i);
+    const y = t.map(v => Math.sin(v/5));
+
+    const trace = {x: t, y: y, type: 'scatter', name: 'sin(t)'};
+    Plotly.newPlot('graph1', [trace], {title: 'Величина 1 от времени'});
+</script>
+{% endblock %}
