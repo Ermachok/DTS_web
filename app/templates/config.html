@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Конфигурация</h2>
+
+    <ul class="nav nav-tabs" id="configTabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#paths">Paths (INI)</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#connections">Connections (JSON)</a>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-3">
+
+        <!-- ===== INI CONFIG ===== -->
+        <div class="tab-pane fade show active" id="paths">
+            {% for section, values in ini_data.items() %}
+            <div class="card mb-3">
+                <div class="card-header bg-secondary text-white"><b>[{{ section }}]</b></div>
+                <div class="card-body">
+                    {% for key, value in values.items() %}
+                    <form action="/config/update_ini" method="post" class="row g-2 align-items-center mb-2">
+                        <div class="col-md-3">
+                            <label class="form-label mb-0">{{ key }}</label>
+                            <input type="hidden" name="section" value="{{ section }}">
+                            <input type="hidden" name="key" value="{{ key }}">
+                        </div>
+                        <div class="col-md-7">
+                            <input type="text" name="value" value="{{ value }}" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary btn-sm w-100">Сохранить</button>
+                        </div>
+                    </form>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- ===== JSON CONFIG ===== -->
+        <div class="tab-pane fade" id="connections">
+            <form action="/config/update_json" method="post">
+                <label class="form-label">Редактировать JSON:</label>
+                <textarea name="content" rows="20" class="form-control" style="font-family: monospace;">{{ json_data | tojson(indent=2) }}</textarea>
+                <button type="submit" class="btn btn-success mt-2">Сохранить JSON</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
