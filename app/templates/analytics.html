@@ -1,18 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
-<h3>Графики и вычисления</h3>
+<div class="container mt-4">
+    <h2>Data Analytics</h2>
 
-<div id="graph1" class="mt-4"></div>
-<div id="graph2" class="mt-4"></div>
-<div id="graph3" class="mt-4"></div>
-<div id="graph4" class="mt-4"></div>
+    <div class="card mb-3 p-3">
+        <h5>Загрузка файлов .msgpk</h5>
+        <form action="/analytics/upload_msgs" method="post" enctype="multipart/form-data"
+              class="row g-2 align-items-center">
+            <div class="col-md-10">
+                <input type="file" name="msg_files" multiple accept=".msgpk,.msg,.bin" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Загрузить</button>
+            </div>
+        </form>
 
-<script>
-    // Пример: заглушка для теста
-    const t = Array.from({length: 50}, (_, i) => i);
-    const y = t.map(v => Math.sin(v/5));
+        {% if status.msgpk_count > 0 %}
+        <p class="mt-2 text-muted">Загружено файлов: {{ status.msgpk_count }}</p>
+        {% endif %}
+    </div>
 
-    const trace = {x: t, y: y, type: 'scatter', name: 'sin(t)'};
-    Plotly.newPlot('graph1', [trace], {title: 'Величина 1 от времени'});
-</script>
+    <div class="d-flex justify-content-between mb-3">
+        <form action="/analytics/run_compute" method="post">
+            <button class="btn btn-success">Выполнить расчёт</button>
+        </form>
+    </div>
+
+    {% if has_results %}
+    <hr>
+    <h4>Результаты расчёта</h4>
+    <div class="row">
+        {% for g in graphs %}
+        <div class="col-md-6 mb-4">
+            <img src="data:image/png;base64,{{ g }}" class="img-fluid rounded shadow">
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

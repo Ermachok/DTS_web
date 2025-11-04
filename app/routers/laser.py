@@ -14,7 +14,6 @@ web_messages = []
 
 
 def add_message(message):
-    """Добавляет сообщение в список"""
     timestamp = time.strftime("%H:%M:%S")
     web_messages.append(f"[{timestamp}] {message}")
     if len(web_messages) > 20:

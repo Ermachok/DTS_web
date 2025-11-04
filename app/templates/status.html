@@ -2,16 +2,64 @@
 {% block content %}
 <h3>Управление и загрузка файлов</h3>
 
-<form action="/status/upload" method="post" enctype="multipart/form-data" class="mt-3">
-    <input type="file" name="files" class="form-control" multiple required>
-    <button type="submit" class="btn btn-primary mt-2">Загрузить файлы</button>
-</form>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header"><strong>Загрузить конфиги (по отдельности)</strong></div>
+            <div class="card-body">
+                <form action="/status/upload_config" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Абсолютная калибровка (JSON)</label>
+                        <input type="file" name="absolut_calib" class="form-control" accept=".json,.txt">
+                    </div>
 
-<h5 class="mt-4">Статусы:</h5>
-<ul class="list-group">
-    <li class="list-group-item">MSG файлы caens: {{ status.msgpk_file or '—' }}</li>
-    <li class="list-group-item">JSON файл: {{ status.json_file or '—' }}</li>
-    <li class="list-group-item">Выполнение: {{ 'Да' if status.processing else 'Нет' }}</li>
-    <li class="list-group-item">Результат готов: {{ 'Да' if status.ready else 'Нет' }}</li>
-</ul>
+                    <div class="mb-3">
+                        <label class="form-label">Спектральная калибровка (JSON)</label>
+                        <input type="file" name="spectral_calib" class="form-control" accept=".json,.txt">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Ожидаемые fe (JSON)</label>
+                        <input type="file" name="fe_expected" class="form-control" accept=".json,.txt">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Connections config (JSON)</label>
+                        <input type="file" name="connections_json" class="form-control" accept=".json,.txt">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Загрузить конфиги</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header"><strong>Статусы</strong></div>
+            <div class="card-body">
+                <ul class="list-group">
+                    <li class="list-group-item">Абсолютная калибровка: {{ status.absolut_calib_file or '—' }}</li>
+                    <li class="list-group-item">Спектральная калибровка: {{ status.spectral_calib_file or '—' }}</li>
+                    <li class="list-group-item">fe_expected: {{ status.fe_expected_file or '—' }}</li>
+                    <li class="list-group-item">Connections JSON: {{ status.connections_file or '—' }}</li>
+
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><strong>Быстрые действия</strong></div>
+            <div class="card-body">
+                <form action="/status/clear_configs" method="post" style="display:inline;">
+                    <button class="btn btn-outline-danger btn-sm" type="submit">Очистить все конфиги</button>
+                </form>
+                <small class="d-block mt-2 text-muted">Загрузка сохраняет данные в память (CONFIG_DATA) и делает их
+                    доступными для вычислений.</small>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 {% endblock %}
