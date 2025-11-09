@@ -13,13 +13,12 @@ def make_interactive_plots(fibers, combiscope_times):
     """
 
     combiscope_times = np.array(combiscope_times, dtype=float)
-
-    # диапазон времени 140–210 мс
     mask = (combiscope_times >= 140) & (combiscope_times <= 210)
     combiscope_times = combiscope_times[mask]
     if len(combiscope_times) == 0:
         return ["<p>Нет данных в диапазоне 140–210 мс</p>"]
 
+    # 1. Te(t)
     fig_T_t = go.Figure()
     for fiber in fibers:
         if not fiber.temperatures:
@@ -36,19 +35,14 @@ def make_interactive_plots(fibers, combiscope_times):
         title="Tₑ(t)",
         xaxis_title="t (ms)",
         yaxis_title="Tₑ (eV)",
+        yaxis=dict(range=[0, None]),  # от 0
         template="plotly_white",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.25,
-            xanchor="center",
-            x=0.5,
-            font=dict(size=9)
-        ),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.25, xanchor="center", x=0.5, font=dict(size=9)),
         height=550,
         margin=dict(l=60, r=40, t=70, b=80)
     )
 
+    # 2. ne(t)
     fig_n_t = go.Figure()
     for fiber in fibers:
         if not fiber.density:
@@ -62,22 +56,17 @@ def make_interactive_plots(fibers, combiscope_times):
             name=f"F{fiber.fiber_number} (z={fiber.z_cm:.1f}см)"
         ))
     fig_n_t.update_layout(
-        title="nₑ (t)",
+        title="nₑ(t)",
         xaxis_title="t (ms)",
         yaxis_title="nₑ (m⁻³)",
+        yaxis=dict(range=[0, None]),
         template="plotly_white",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.25,
-            xanchor="center",
-            x=0.5,
-            font=dict(size=9)
-        ),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.25, xanchor="center", x=0.5, font=dict(size=9)),
         height=550,
         margin=dict(l=60, r=40, t=70, b=80)
     )
 
+    # 3. Te(z)
     fig_T_z = go.Figure()
     n_points = min(len(fiber.temperatures) for fiber in fibers if fiber.temperatures)
     for i in range(n_points):
@@ -97,22 +86,17 @@ def make_interactive_plots(fibers, combiscope_times):
             name=f"{combiscope_times[i]:.1f} мс"
         ))
     fig_T_z.update_layout(
-        title="Tₑ (Z)",
+        title="Tₑ(Z)",
         xaxis_title="Z (cm)",
         yaxis_title="Tₑ (eV)",
+        yaxis=dict(range=[0, None]),
         template="plotly_white",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.25,
-            xanchor="center",
-            x=0.5,
-            font=dict(size=9)
-        ),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.25, xanchor="center", x=0.5, font=dict(size=9)),
         height=650,
         margin=dict(l=60, r=40, t=70, b=80)
     )
 
+    # 4. ne(z)
     fig_n_z = go.Figure()
     n_points = min(len(fiber.density) for fiber in fibers if fiber.density)
     for i in range(n_points):
@@ -132,18 +116,12 @@ def make_interactive_plots(fibers, combiscope_times):
             name=f"{combiscope_times[i]:.1f} мс"
         ))
     fig_n_z.update_layout(
-        title="nₑ (Z)",
+        title="nₑ(Z)",
         xaxis_title="Z (cm)",
         yaxis_title="nₑ (m⁻³)",
+        yaxis=dict(range=[0, None]),
         template="plotly_white",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.25,
-            xanchor="center",
-            x=0.5,
-            font=dict(size=9)
-        ),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.25, xanchor="center", x=0.5, font=dict(size=9)),
         height=650,
         margin=dict(l=60, r=40, t=70, b=80)
     )

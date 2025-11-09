@@ -1,5 +1,4 @@
 import plotly.graph_objects as go
-import numpy as np
 
 
 def make_raw_signals_plot(polychromator, channel: int, from_shot: int, to_shot):
@@ -36,13 +35,13 @@ def make_raw_signals_plot(polychromator, channel: int, from_shot: int, to_shot):
             x=times[shot][:len(signal)],
             y=signal,
             mode="lines",
-            name=f"Shot {shot}"
+            name=f"Shot {shot}",
         ))
 
     fig.update_layout(
         title=f"Сырые сигналы — {polychromator.poly_name}, канал {channel}",
-        xaxis_title="Время (ns)",
-        yaxis_title="Интенсивность (а.е.)",
+        xaxis_title="Time (ns)",
+        yaxis_title="Volts (mV)",
         template="plotly_white",
         height=700,
         legend=dict(
@@ -51,8 +50,9 @@ def make_raw_signals_plot(polychromator, channel: int, from_shot: int, to_shot):
             y=-0.25,
             xanchor="center",
             x=0.5,
-            font=dict(size=9)
+            font=dict(size=9),
         )
     )
+    fig.update_layout(xaxis_range=[20, 70])
 
     return fig.to_html(full_html=False, include_plotlyjs='cdn')

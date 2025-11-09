@@ -72,7 +72,7 @@ class Polychromator:
         """
         excess_noise_factor = 3
         all_const = self.gain.resulting_multiplier
-        noise_len = 400
+        noise_len = 300
 
         all_shots_signal = []
         all_shots_noise = []
@@ -94,12 +94,23 @@ class Polychromator:
                         self.config[poly_ch]["sig_RightBord"]
                         - self.config[poly_ch]["sig_LeftBord"]
                 )
+                if poly_ch == 0:
+                    summ_of_ideal_thomson_signal = 24  # взят отнормированный сигнал томсона без шумов
+                    sig_maximum = max(
+                        self.signals[poly_ch][shot][
+                        signal_ind[0]: signal_ind[
+                            1]])
+                    signal_integral = (sig_maximum - signal_lvl) * summ_of_ideal_thomson_signal * t_step
 
-                signal_integral = (
-                        sum(self.signals[poly_ch][shot][signal_ind[0]: signal_ind[1]])
-                        * t_step
-                        - lvl_integral
-                )
+                    print(self.poly_name, signal_integral)
+
+                else:
+                    signal_integral = (
+                            sum(self.signals[poly_ch][shot][signal_ind[0]: signal_ind[1]])
+                            * t_step
+                            - lvl_integral
+                    )
+
                 phe_number = signal_integral * all_const
 
                 noise_track = (
@@ -206,7 +217,7 @@ class Polychromator:
         laser_wl = 1064.4e-9
         e_charge = 1.6e-19
         M = 100
-        laser_energy = 1.5
+        laser_energy = 1.2
 
         full_coef = (
                 self.absolut_calibration
