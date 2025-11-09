@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from app.dependencies import templates
+
+from app.services import laser
 import threading
+import asyncio
 import socket
 import select
 import time
@@ -11,6 +14,7 @@ router = APIRouter(prefix="/laser", tags=["laser"])
 is_listening = False
 udp_thread = None
 web_messages = []
+laser_ip = ('192.168.10.110', 4001)
 
 
 def add_message(message):
@@ -25,7 +29,7 @@ def udp_listener():
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sock.bind(("0.0.0.0", 8888))
+    sock.bind(("192.168.10.108", 8888))
     sock.setblocking(False)
 
     add_message("UDP listener started on port 8888")
@@ -38,8 +42,19 @@ def udp_listener():
 
             if packet_value == 255:
                 add_message(f"Пойман пакет TOKAMAK START (255) от {addr[0]}")
+                laser.stop(laser_ip)
+                time.sleep(1)
+                laser.disarm(laser_ip)
+                add_message(f"Laser off")
+
+
             elif packet_value == 127:
                 add_message(f"Пойман пакет TOKAMAK COUNTDOWN (127) от {addr[0]}")
+                add_message(f"Arming and then start")
+                laser.arm(laser_ip)
+                time.sleep(4)
+                laser.start(laser_ip)
+                add_message(f"Armed")
             else:
                 add_message(f"Пойман пакет: {packet_value} от {addr[0]}")
 
@@ -63,12 +78,22 @@ async def get_messages():
 @router.post("/arm")
 async def arm_laser():
     add_message("ARM button pressed")
+    laser.arm(laser_ip)
+    add_message("ARM send")
+    await asyncio.sleep(3)
+    laser.start(laser_ip)
+    add_message('START send')
+
     return JSONResponse({"status": "success", "message": "Laser armed"})
 
 
 @router.post("/disarm")
 async def disarm_laser():
     add_message("DISARM button pressed")
+    laser.stop(laser_ip)
+    await asyncio.sleep(1)
+    laser.disarm(laser_ip)
+    add_message('LASER disarmed')
     return JSONResponse({"status": "success", "message": "Laser disarmed"})
 
 
@@ -102,16 +127,16 @@ async def toggle_ready(ready: bool = Form(...)):
         return JSONResponse({"status": "success", "message": "Not ready - UDP stopped"})
 
 
-@router.post("/send-test-packet")
-async def send_test_packet(request: dict):
-    packet_value = request.get("packet_value", 255)
-
-    add_message(f"Sent test packet: {packet_value}")
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    data = packet_value.to_bytes(8, 'big')
-    sock.sendto(data, ('255.255.255.255', 8888))
-    sock.close()
-
-    return JSONResponse({"status": "success", "message": f"Test packet {packet_value} sent"})
+# @router.post("/send-test-packet")
+# async def send_test_packet(request: dict):
+#     packet_value = request.get("packet_value", 255)
+#
+#     add_message(f"Sent test packet: {packet_value}")
+#
+#     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+#     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+#     data = packet_value.to_bytes(8, 'big')
+#     sock.sendto(data, ('255.255.255.255', 8888))
+#     sock.close()
+#
+#     return JSONResponse({"status": "success", "message": f"Test packet {packet_value} sent"})

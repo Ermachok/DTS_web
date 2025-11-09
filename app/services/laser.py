@@ -1,5 +1,4 @@
 import socket
-import threading
 import logging
 
 logging.basicConfig(level=logging.INFO)

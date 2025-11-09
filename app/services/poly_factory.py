@@ -4,8 +4,7 @@ import os.path
 import statistics
 from pathlib import Path
 import matplotlib.pyplot as plt
-from app.services.diagnostic_utils import (Gains_T15_34, Gains_T15_35,
-                                           GainsEquator, LaserNdYag)
+from app.services.diagnostic_utils import GainsEquator, LaserNdYag
 
 
 class Polychromator:
@@ -17,7 +16,7 @@ class Polychromator:
             caen_time: list,
             caen_data: list,
             config_connection=None,
-            gains: GainsEquator | Gains_T15_34 | Gains_T15_35 = None,
+            gains: GainsEquator = None,
             laser: LaserNdYag = None,
             absolut_calib: Path | dict = None,
             spectral_calib: Path | dict = None,
@@ -77,7 +76,7 @@ class Polychromator:
 
         all_shots_signal = []
         all_shots_noise = []
-        for shot in range(1, shots_before_plasma + shots_after):
+        for shot in range(1, shots_before_plasma + shots_after):  # 1 пропускаю 0 запуск
             all_ch_signal = []
             all_ch_noise = []
             for poly_ch in range(self.ch_number):
@@ -339,83 +338,101 @@ def built_fibers(
         expected_fe: dict,
         spectral_calib: dict,
         absolut_calib: dict,
-        laser: LaserNdYag = None,
+        laser_energy: float,
 ) -> (list, list[Polychromator]):
     equatorGain = GainsEquator()
     equator_fe = expected_fe
 
+    laser = LaserNdYag(laser_wl=1064.4e-9, laser_energy=laser_energy)
+
     poly_042 = Polychromator(
         poly_name="eqTS_42_G10",
-        fiber_number=2,
-        z_cm=-37.1,
-        config_connection=config_connection["equator_caens"][2]["channels"][1:5],
+        fiber_number=3,
+        z_cm=-38.6,
+        config_connection=config_connection["equator_caens"][0]["channels"][1:5],
         gains=equatorGain,
         fe_expected=equator_fe,
         laser=laser,
-        spectral_calib=spectral_calib,
-        absolut_calib=absolut_calib,
-        caen_time=all_caens[2]["shots_time"],
-        caen_data=all_caens[2]["caen_channels"][1:5],
+        spectral_calib=spectral_calib["eqTS_42_G10"],
+        absolut_calib=absolut_calib["eqTS_42_G10"],
+        caen_time=all_caens[0]["shots_time"],
+        caen_data=all_caens[0]["caen_channels"][1:5],
+    )
+
+    poly_046 = Polychromator(
+        poly_name="eqTS_46_G10",
+        fiber_number=2,
+        z_cm=-37.1,
+        config_connection=config_connection["equator_caens"][1]["channels"][11:16],
+        gains=equatorGain,
+        fe_expected=equator_fe,
+        laser=laser,
+        spectral_calib=spectral_calib["eqTS_46_G10"],
+        absolut_calib=absolut_calib["eqTS_46_G10"],
+        caen_time=all_caens[1]["shots_time"],
+        caen_data=all_caens[1]["caen_channels"][11:16],
     )
 
     poly_047 = Polychromator(
         poly_name="eqTS_47_G10",
-        fiber_number=3,
-        z_cm=-38.6,
-        config_connection=config_connection["equator_caens"][2]["channels"][6:10],
+        fiber_number=4,
+        z_cm=-39.9,
+        config_connection=config_connection["equator_caens"][0]["channels"][6:10],
         gains=equatorGain,
         fe_expected=equator_fe,
         laser=laser,
-        spectral_calib=spectral_calib,
-        absolut_calib=absolut_calib,
-        caen_time=all_caens[2]["shots_time"],
-        caen_data=all_caens[2]["caen_channels"][6:10],
+        spectral_calib=spectral_calib["eqTS_47_G10"],
+        absolut_calib=absolut_calib["eqTS_47_G10"],
+        caen_time=all_caens[0]["shots_time"],
+        caen_data=all_caens[0]["caen_channels"][6:10],
     )
 
     poly_048 = Polychromator(
         poly_name="eqTS_48_G10",
-        fiber_number=4,
-        z_cm=-39.9,
-        config_connection=config_connection["equator_caens"][2]["channels"][11:15],
+        fiber_number=5,
+        z_cm=-41,
+        config_connection=config_connection["equator_caens"][0]["channels"][11:16],
         gains=equatorGain,
         fe_expected=equator_fe,
         laser=laser,
-        spectral_calib=spectral_calib,
-        absolut_calib=absolut_calib,
-        caen_time=all_caens[2]["shots_time"],
-        caen_data=all_caens[2]["caen_channels"][11:15],
+        spectral_calib=spectral_calib["eqTS_48_G10"],
+        absolut_calib=absolut_calib["eqTS_48_G10"],
+        caen_time=all_caens[0]["shots_time"],
+        caen_data=all_caens[0]["caen_channels"][11:16],
     )
 
     poly_049 = Polychromator(
         poly_name="eqTS_49_G10",
-        fiber_number=5,
-        z_cm=-41,
-        config_connection=config_connection["equator_caens"][3]["channels"][1:5],
+        fiber_number=6,
+        z_cm=-42.2,
+        config_connection=config_connection["equator_caens"][1]["channels"][1:5],
         gains=equatorGain,
         fe_expected=equator_fe,
         laser=laser,
-        spectral_calib=spectral_calib,
-        absolut_calib=absolut_calib,
-        caen_time=all_caens[3]["shots_time"],
-        caen_data=all_caens[3]["caen_channels"][1:5],
+        spectral_calib=spectral_calib["eqTS_49_G10"],
+        absolut_calib=absolut_calib["eqTS_49_G10"],
+        caen_time=all_caens[1]["shots_time"],
+        caen_data=all_caens[1]["caen_channels"][1:5],
     )
 
     poly_050 = Polychromator(
         poly_name="eqTS_50_G10",
-        fiber_number=6,
-        z_cm=-42.2,
-        config_connection=config_connection["equator_caens"][3]["channels"][6:10],
+        fiber_number=7,
+        z_cm=-43.25,
+        config_connection=config_connection["equator_caens"][1]["channels"][6:10],
         gains=equatorGain,
         fe_expected=equator_fe,
         laser=laser,
-        spectral_calib=spectral_calib,
-        absolut_calib=absolut_calib,
-        caen_time=all_caens[3]["shots_time"],
-        caen_data=all_caens[3]["caen_channels"][6:10],
+        spectral_calib=spectral_calib["eqTS_50_G10"],
+        absolut_calib=absolut_calib["eqTS_50_G10"],
+        caen_time=all_caens[1]["shots_time"],
+        caen_data=all_caens[1]["caen_channels"][6:10],
     )
+
     del all_caens
 
     fibers = [
+        poly_046,
         poly_042,
         poly_047,
         poly_048,

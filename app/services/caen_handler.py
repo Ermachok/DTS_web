@@ -42,7 +42,7 @@ def caen_msg_handler(
 
 
 def handle_all_caens(path: Path = "uploads/msg_pkgs", processed_shots: int | str = 30) -> (list, list):
-    msg_files_num_x10 = [0, 1, 2, 3]
+    msg_files_num_x10 = [6, 7]
 
     all_caens = []
     combiscope_times = []

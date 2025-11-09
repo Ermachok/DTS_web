@@ -3,6 +3,7 @@
 <div class="container mt-4">
     <h2>Data Analytics</h2>
 
+    <!-- Загрузка файлов -->
     <div class="card mb-3 p-3">
         <h5>Загрузка файлов .msgpk</h5>
         <form action="/analytics/upload_msgs" method="post" enctype="multipart/form-data"
@@ -14,28 +15,127 @@
                 <button type="submit" class="btn btn-primary w-100">Загрузить</button>
             </div>
         </form>
-
         {% if status.msgpk_count > 0 %}
         <p class="mt-2 text-muted">Загружено файлов: {{ status.msgpk_count }}</p>
         {% endif %}
     </div>
 
+    <!-- Кнопки действий -->
     <div class="d-flex justify-content-between mb-3">
         <form action="/analytics/run_compute" method="post">
             <button class="btn btn-success">Выполнить расчёт</button>
         </form>
+
+        <button id="btnRaw" class="btn btn-secondary">Сырые сигналы</button>
     </div>
 
-    {% if has_results %}
-    <hr>
-    <h4>Результаты расчёта</h4>
-    <div class="row">
-        {% for g in graphs %}
-        <div class="col-md-6 mb-4">
-            <img src="data:image/png;base64,{{ g }}" class="img-fluid rounded shadow">
+    <!-- Панель выбора для сырых сигналов -->
+    <div id="rawControls" class="card p-3 mb-3" style="display:none;">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Полихроматор</label>
+                <select id="polySelect" class="form-select"></select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Канал</label>
+                <select id="chSelect" class="form-select"></select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">От шота</label>
+                <input id="fromShot" type="number" class="form-control" value="10">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">До шота</label>
+                <input id="toShot" type="text" class="form-control" value="20">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button id="btnPlotRaw" class="btn btn-primary w-100">Построить</button>
+            </div>
         </div>
-        {% endfor %}
     </div>
-    {% endif %}
+
+    <!-- Общий контейнер для всех графиков -->
+    <div id="plotContainer">
+        {% if has_results %}
+        <hr>
+        <h4>Результаты расчёта</h4>
+        <div class="row">
+            {% for g in graphs %}
+            <div class="col-md-6 mb-4">
+                {{ g | safe }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Контейнер для сырых сигналов -->
+        <div id="rawPlotWrapper" style="width:100%; height:700px;">
+            <div id="rawPlot" style="width:100%; height:100%;"></div>
+        </div>
+    </div>
 </div>
+
+<script>
+    document.getElementById("btnRaw").addEventListener("click", async () => {
+        const resp = await fetch("/analytics/raw_options");
+        const data = await resp.json();
+
+        const polySel = document.getElementById("polySelect");
+        polySel.innerHTML = "";
+        Object.keys(data).forEach(name => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            polySel.appendChild(opt);
+        });
+
+        const chSel = document.getElementById("chSelect");
+        chSel.innerHTML = "";
+        if (Object.keys(data).length > 0) {
+            const firstPoly = Object.keys(data)[0];
+            data[firstPoly].forEach(ch => {
+                const opt = document.createElement("option");
+                opt.value = ch;
+                opt.textContent = ch;
+                chSel.appendChild(opt);
+            });
+        }
+
+        polySel.addEventListener("change", () => {
+            const chans = data[polySel.value];
+            chSel.innerHTML = "";
+            chans.forEach(ch => {
+                const opt = document.createElement("option");
+                opt.value = ch;
+                opt.textContent = ch;
+                chSel.appendChild(opt);
+            });
+        });
+
+        document.getElementById("rawControls").style.display = "block";
+    });
+
+    document.getElementById("btnPlotRaw").addEventListener("click", async () => {
+        const formData = new FormData();
+        formData.append("polychromator_name", document.getElementById("polySelect").value);
+        formData.append("channel", document.getElementById("chSelect").value);
+        formData.append("from_shot", document.getElementById("fromShot").value);
+        formData.append("to_shot", document.getElementById("toShot").value);
+
+        const resp = await fetch("/analytics/raw_signals", { method: "POST", body: formData });
+        const data = await resp.json();
+
+        const rawDiv = document.getElementById("rawPlot");
+        rawDiv.innerHTML = data.plot_html;
+
+        // Исполнение скриптов Plotly при full_html=False
+        const scripts = rawDiv.getElementsByTagName("script");
+        for (let i = 0; i < scripts.length; i++) {
+            try { eval(scripts[i].innerHTML); } catch(e) { console.error(e); }
+        }
+
+        // Прокрутка к блоку с сырыми сигналами
+        rawDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+</script>
 {% endblock %}
