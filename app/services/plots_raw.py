@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
 
 
-def make_raw_signals_plot(polychromator, channel: int, from_shot: int, to_shot):
+def make_raw_signals_plot(polychromator, channel: int, from_shot: int, to_shot, combiscope_times):
     """
     Строит сырые сигналы выбранного полихроматора и канала.
     """
@@ -12,7 +12,6 @@ def make_raw_signals_plot(polychromator, channel: int, from_shot: int, to_shot):
 
     n_shots = len(signals[channel])
 
-    # обработка "all" и выход за границы
     if isinstance(to_shot, str) and to_shot.lower() == "all":
         to_shot = n_shots
     else:
@@ -35,7 +34,8 @@ def make_raw_signals_plot(polychromator, channel: int, from_shot: int, to_shot):
             x=times[shot][:len(signal)],
             y=signal,
             mode="lines",
-            name=f"Shot {shot}",
+            #name=f"Shot {shot}",
+            name=f"Shot {combiscope_times[shot]:.1f} ms",
         ))
 
     fig.update_layout(

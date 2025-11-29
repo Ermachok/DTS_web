@@ -1,3 +1,5 @@
+import copy
+
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi import APIRouter, Request, Form, UploadFile, File
 from fastapi.responses import JSONResponse
@@ -12,6 +14,24 @@ from app.services.plots_raw import make_raw_signals_plot
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 POLYCHROMATORS_CACHE = {}
+COMBISCOPE_TIMES_CACHE = None
+
+
+def _polychromators_list_from_cache():
+    """
+    Возвращает список словарей [{'name': ..., 'z_cm': ...}, ...] из POLYCHROMATORS_CACHE
+    в порядке добавления (если важен порядок — cache строится в порядке fibers).
+    """
+    lst = []
+    for key, p in POLYCHROMATORS_CACHE.items():
+        name = getattr(p, "poly_name", key)
+        z = getattr(p, "z_cm", None)
+        try:
+            z_val = float(z) if z is not None else None
+        except Exception:
+            z_val = None
+        lst.append({"name": name, "z_cm": z_val})
+    return lst
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -24,6 +44,7 @@ async def analytics_page(request: Request):
         "has_results": STATUS.get("ready", False),
         "status": STATUS,
         "graphs": STATUS.get("graphs", []),
+        "polychromators": _polychromators_list_from_cache(),
     }
     return templates.TemplateResponse("analytics.html", context)
 
@@ -44,8 +65,14 @@ async def upload_msgs(msg_files: list[UploadFile] | None = File(None)):
 
 @router.get("/raw_options")
 async def get_raw_options():
+    global COMBISCOPE_TIMES_CACHE
     """
-    Возвращает список доступных полихроматоров и их каналов.
+    Возвращает список доступных полихроматоров и их каналов, а также краткую информацию о полихроматорах.
+    Формат ответа:
+      {
+        "channels": { "poly_name": [0,1,2,...], ... },
+        "polychromators": [ {"name": "...", "z_cm": 38.6}, ... ]
+      }
     """
     experiment_data = handle_all_caens()
     combiscope_times = experiment_data["combiscope_times"]
@@ -63,17 +90,23 @@ async def get_raw_options():
         expected_fe=expected_fe,
         spectral_calib=spectral_calibration,
         absolut_calib=absolut_calibration,
-        laser_energy=1.2
+        laser_energy=1.5
     )
 
+    COMBISCOPE_TIMES_CACHE = copy.deepcopy(combiscope_times)
     poly_dict = {}
+    # Обновляем кеш полихроматоров (на случай изменения набора)
+    POLYCHROMATORS_CACHE.clear()
     for p in fibers:
         if not hasattr(p, "poly_name") or not hasattr(p, "signals"):
             continue
         poly_dict[p.poly_name] = list(range(len(p.signals)))
         POLYCHROMATORS_CACHE[p.poly_name] = p
 
-    return JSONResponse(poly_dict)
+    # Подготовим компактный список для фронта (name, z_cm)
+    polychromators_short = _polychromators_list_from_cache()
+
+    return JSONResponse({"channels": poly_dict, "polychromators": polychromators_short})
 
 
 @router.post("/raw_signals")
@@ -89,7 +122,8 @@ async def raw_signals(request: Request,
     if not poly:
         return {"plot_html": f"<p>Полихроматор {polychromator_name} не найден</p>"}
 
-    html = make_raw_signals_plot(poly, channel, from_shot, int(to_shot) if to_shot.isdigit() else to_shot)
+    html = make_raw_signals_plot(poly, channel, from_shot, int(to_shot) if to_shot.isdigit() else to_shot,
+                                 COMBISCOPE_TIMES_CACHE)
     return {"plot_html": html}
 
 
@@ -115,10 +149,20 @@ async def run_compute(request: Request):
                                             expected_fe=expected_fe,
                                             spectral_calib=spectral_calibration,
                                             absolut_calib=absolut_calibration,
-                                            laser_energy=1.2
+                                            laser_energy=1.5
                                             )
 
+    # Рассчёт Te и ne
     calculate_Te_ne(fibers=fibers)
+
+    # Обновляем кеш полихроматоров для шаблона/raw_options
+    POLYCHROMATORS_CACHE.clear()
+    for p in fibers:
+        if not hasattr(p, "poly_name"):
+            continue
+        POLYCHROMATORS_CACHE[p.poly_name] = p
+
+    # Формируем графики
     plots_html = make_interactive_plots(fibers, combiscope_times=combiscope_times)
 
     STATUS.update({
@@ -132,5 +176,6 @@ async def run_compute(request: Request):
         "has_results": True,
         "status": STATUS,
         "graphs": plots_html,
+        "polychromators": _polychromators_list_from_cache(),
     }
     return templates.TemplateResponse("analytics.html", context)
