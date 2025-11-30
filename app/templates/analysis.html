@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card p-3">
+  <h4>Analysis — загрузка файла фильтров</h4>
+
+  <div id="uploadSection" class="mb-3">
+    <label class="form-label">Файл фильтров (CSV)</label>
+    <input id="filterFile" type="file" accept=".csv,.txt" class="form-control">
+    <div class="mt-2">
+      <button id="btnUpload" class="btn btn-primary">Загрузить</button>
+      <button id="btnLoadDefault" class="btn btn-outline-secondary ms-2">Загрузить дефолт</button>
+    </div>
+    <div class="mt-2">
+      <small id="uploadInfo" class="text-muted">
+        {% if default_loaded %}
+          Дефолтный файл загружен: {{ default_path }} — {{ wl_count }} точек, {{ channels }} канал(ов). {{ default_msg }}
+        {% else %}
+          {% if default_msg %}
+            Попытка загрузить дефолтный файл {{ default_path }}: {{ default_msg }}
+          {% else %}
+            (Дефолтный файл не загружен)
+          {% endif %}
+        {% endif %}
+      </small>
+    </div>
+  </div>
+
+  <div id="paramsSection" style="display:{% if has_filters %}block{% else %}none{% endif %};">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">T_e (eV)</label>
+        <input id="teInput" type="number" step="0.1" class="form-control" value="3.0">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Theta (deg)</label>
+        <input id="thetaInput" type="number" step="0.1" class="form-control" value="110.0">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Lambda0 (nm) — optional</label>
+        <input id="lambda0Input" type="number" step="0.1" class="form-control" placeholder="default: {{ default_lambda0 }}">
+      </div>
+      <div class="col-auto">
+        <button id="btnPlot" class="btn btn-success">Отрисовать сечение</button>
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <div id="plotArea" style="width:100%; height:520px;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('btnUpload').addEventListener('click', async () => {
+  const input = document.getElementById('filterFile');
+  const info = document.getElementById('uploadInfo');
+  if (!input.files || input.files.length === 0) {
+    info.textContent = 'Выберите файл.';
+    return;
+  }
+  const fd = new FormData();
+  fd.append('file', input.files[0]);
+  info.textContent = 'Загружается...';
+  try {
+    const resp = await fetch('/analysis/upload_filters', { method: 'POST', body: fd });
+    const data = await resp.json();
+    if (!data.ok) {
+      info.textContent = 'Ошибка: ' + (data.error || JSON.stringify(data));
+      return;
+    }
+    info.textContent = `Файл принят — ${data.wl_count} точек, ${data.channels} канал(ов).`;
+    document.getElementById('paramsSection').style.display = 'block';
+    document.getElementById('paramsSection').scrollIntoView({behavior: 'smooth'});
+  } catch (err) {
+    console.error(err);
+    info.textContent = 'Ошибка при загрузке файла';
+  }
+});
+
+document.getElementById('btnLoadDefault').addEventListener('click', async () => {
+  const info = document.getElementById('uploadInfo');
+  info.textContent = 'Загружается дефолт...';
+  try {
+    const resp = await fetch('/analysis/load_default', { method: 'POST' });
+    const data = await resp.json();
+    if (!data.ok) {
+      info.textContent = 'Ошибка загрузки дефолта: ' + (data.error || JSON.stringify(data));
+      return;
+    }
+    info.textContent = `Дефолт загружен — ${data.wl_count} точек, ${data.channels} канал(ов).`;
+    document.getElementById('paramsSection').style.display = 'block';
+    document.getElementById('paramsSection').scrollIntoView({behavior: 'smooth'});
+  } catch (err) {
+    console.error(err);
+    info.textContent = 'Ошибка при загрузке дефолта';
+  }
+});
+
+document.getElementById('btnPlot').addEventListener('click', async () => {
+  const te = document.getElementById('teInput').value;
+  const theta = document.getElementById('thetaInput').value;
+  const lambda0 = document.getElementById('lambda0Input').value;
+  const fd = new FormData();
+  fd.append('te_eV', te);
+  fd.append('theta_deg', theta);
+  if (lambda0) fd.append('lambda_0_nm', lambda0);
+
+  try {
+    const resp = await fetch('/analysis/plot_section', { method: 'POST', body: fd });
+    const data = await resp.json();
+    if (!data.ok) {
+      alert('Ошибка: ' + (data.error || JSON.stringify(data)));
+      return;
+    }
+
+    const wl = data.wl;
+    const density = data.density;
+    const filters = data.filters || [];
+    const lambda0_used = data.lambda_0_nm;
+    const plot_min = data.plot_min_wl || 1000;
+
+    const traces = [];
+    const colors = ['#1f77b4', '#ff7f0e'];
+    for (let i = 0; i < filters.length; i++) {
+      traces.push({
+        x: wl,
+        y: filters[i],
+        mode: 'lines',
+        name: `Filter ${i+1}`,
+        line: { width: 2, color: colors[i % colors.length] },
+        yaxis: 'y1'
+      });
+    }
+
+    traces.push({
+      x: wl,
+      y: density,
+      mode: 'lines',
+      name: `Spectral density (T_e=${te} eV)`,
+      line: { width: 2, color: '#2ca02c' },
+      yaxis: 'y2'
+    });
+
+    const xMax = Math.max(...wl);
+
+    const layout = {
+      title: `Фильтры и спектральная плотность)`,
+      xaxis: { title: 'Wavelength (nm)', range: [plot_min, xMax] },
+      yaxis: { title: 'Transmission ', rangemode: 'tozero' },
+      yaxis2: {
+        title: 'Spectral density (arb.)',
+        overlaying: 'y',
+        side: 'right'
+      },
+      legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.22, yanchor: 'top' },
+      margin: { t: 50, b: 120 },
+    };
+
+    Plotly.newPlot('plotArea', traces, layout, {responsive: true});
+    document.getElementById('plotArea').scrollIntoView({behavior: 'smooth'});
+
+  } catch (err) {
+    console.error(err);
+    alert('Ошибка при запросе сечения');
+  }
+});
+</script>
+{% endblock %}

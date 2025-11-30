@@ -95,7 +95,7 @@ async def get_raw_options():
 
     COMBISCOPE_TIMES_CACHE = copy.deepcopy(combiscope_times)
     poly_dict = {}
-    # Обновляем кеш полихроматоров (на случай изменения набора)
+    # Обновляем кеш полихроматоров
     POLYCHROMATORS_CACHE.clear()
     for p in fibers:
         if not hasattr(p, "poly_name") or not hasattr(p, "signals"):
@@ -103,7 +103,6 @@ async def get_raw_options():
         poly_dict[p.poly_name] = list(range(len(p.signals)))
         POLYCHROMATORS_CACHE[p.poly_name] = p
 
-    # Подготовим компактный список для фронта (name, z_cm)
     polychromators_short = _polychromators_list_from_cache()
 
     return JSONResponse({"channels": poly_dict, "polychromators": polychromators_short})
@@ -112,18 +111,22 @@ async def get_raw_options():
 @router.post("/raw_signals")
 async def raw_signals(request: Request,
                       polychromator_name: str = Form(...),
-                      channel: int = Form(...),
                       from_shot: int = Form(...),
                       to_shot: str = Form(...)):
     """
-    Возвращает HTML-график сырых сигналов выбранного полихроматора и канала.
+    Возвращает HTML-график сырых сигналов выбранного полихроматора.
+    По умолчанию строит каналы 0 и 1 (один над другим).
     """
     poly = POLYCHROMATORS_CACHE.get(polychromator_name)
     if not poly:
         return {"plot_html": f"<p>Полихроматор {polychromator_name} не найден</p>"}
 
-    html = make_raw_signals_plot(poly, channel, from_shot, int(to_shot) if to_shot.isdigit() else to_shot,
-                                 COMBISCOPE_TIMES_CACHE)
+    # to_shot может быть "all" или число в строке
+    to_shot_param = int(to_shot) if to_shot.isdigit() else to_shot
+
+    # Строим каналы 0 и 1
+    html = make_raw_signals_plot(poly, channels=[0, 1], from_shot=from_shot, to_shot=to_shot_param,
+                                 combiscope_times=COMBISCOPE_TIMES_CACHE)
     return {"plot_html": html}
 
 
@@ -152,17 +155,15 @@ async def run_compute(request: Request):
                                             laser_energy=1.5
                                             )
 
-    # Рассчёт Te и ne
     calculate_Te_ne(fibers=fibers)
 
-    # Обновляем кеш полихроматоров для шаблона/raw_options
+    # Обновляем кеш полихроматоров для шаблона
     POLYCHROMATORS_CACHE.clear()
     for p in fibers:
         if not hasattr(p, "poly_name"):
             continue
         POLYCHROMATORS_CACHE[p.poly_name] = p
 
-    # Формируем графики
     plots_html = make_interactive_plots(fibers, combiscope_times=combiscope_times)
 
     STATUS.update({

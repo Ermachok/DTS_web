@@ -126,19 +126,18 @@
     <!-- Панель выбора для сырых сигналов (по нажатию btnRaw появляется) -->
     <div id="rawControls" class="card p-3 mb-3" style="display:none;">
         <div class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-5">
                 <label class="form-label">Полихроматор</label>
                 <select id="polySelect" class="form-select"></select>
             </div>
+
+            <!-- Убрали выбор канала: строим сразу каналы 0 и 1 -->
+
             <div class="col-md-3">
-                <label class="form-label">Канал</label>
-                <select id="chSelect" class="form-select"></select>
-            </div>
-            <div class="col-md-2">
                 <label class="form-label">From shot</label>
                 <input id="fromShot" type="number" class="form-control" value="0">
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="form-label">To shot</label>
                 <input id="toShot" type="text" class="form-control" value="20">
             </div>
@@ -154,24 +153,24 @@
                 <table class="table table-sm table-borderless poly-compact mb-0">
                     <tbody id="polyCompactBody">
                     {% if polychromators %}
-                        {% set total = polychromators|length %}
-                        {% set cols = ((total + 2) // 3) %}
-                        {% for r in range(3) %}
-                        <tr>
-                            {% for c in range(cols) %}
-                            {% set idx = c * 3 + r %}
-                            <td class="poly-cell">
-                                {% if idx < total %}
-                                {% set p = polychromators[idx] %}
-                                <span class="poly-name" title="{{ p.name }}">{{ p.name }}</span>
-                                <span class="poly-z">{{ '%.1f'|format(p.z_cm) if p.z_cm is not none else '-' }} cm</span>
-                                {% else %}
-                                &nbsp;
-                                {% endif %}
-                            </td>
-                            {% endfor %}
-                        </tr>
+                    {% set total = polychromators|length %}
+                    {% set cols = ((total + 2) // 3) %}
+                    {% for r in range(3) %}
+                    <tr>
+                        {% for c in range(cols) %}
+                        {% set idx = c * 3 + r %}
+                        <td class="poly-cell">
+                            {% if idx < total %}
+                            {% set p = polychromators[idx] %}
+                            <span class="poly-name" title="{{ p.name }}">{{ p.name }}</span>
+                            <span class="poly-z">{{ '%.1f'|format(p.z_cm) if p.z_cm is not none else '-' }} cm</span>
+                            {% else %}
+                            &nbsp;
+                            {% endif %}
+                        </td>
                         {% endfor %}
+                    </tr>
+                    {% endfor %}
                     {% endif %}
                     </tbody>
                 </table>
@@ -395,39 +394,17 @@
             polySel.appendChild(opt);
         });
 
-        const chSel = document.getElementById("chSelect");
-        chSel.innerHTML = "";
-        if (polyNames.length > 0) {
-            const firstPoly = polyNames[0];
-            (data.channels[firstPoly] || []).forEach(ch => {
-                const opt = document.createElement("option");
-                opt.value = ch;
-                opt.textContent = ch;
-                chSel.appendChild(opt);
-            });
-        }
-
         renderCompactPolychromators(data.polychromators || []);
 
         document.getElementById("rawControls").style.display = "block";
         document.getElementById("rawControls").scrollIntoView({ behavior: "smooth", block: "start" });
 
-        polySel.addEventListener("change", () => {
-            const chans = data.channels[polySel.value] || [];
-            chSel.innerHTML = "";
-            chans.forEach(ch => {
-                const opt = document.createElement("option");
-                opt.value = ch;
-                opt.textContent = ch;
-                chSel.appendChild(opt);
-            });
-        });
+        // Больше не меняем список каналов при смене полихроматора — каналов выбор нет
     });
 
     document.getElementById("btnPlotRaw").addEventListener("click", async () => {
         const formData = new FormData();
         formData.append("polychromator_name", document.getElementById("polySelect").value);
-        formData.append("channel", document.getElementById("chSelect").value);
         formData.append("from_shot", document.getElementById("fromShot").value);
         formData.append("to_shot", document.getElementById("toShot").value);
 
@@ -456,4 +433,4 @@
         {% endif %}
     });
 </script>
-{% endblock %}  
+{% endblock %}

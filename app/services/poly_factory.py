@@ -7,6 +7,15 @@ from app.services.diagnostic_utils import GainsEquator, LaserNdYag
 
 
 class Polychromator:
+    # Class-level constants
+    EXCESS_NOISE_FACTOR = 3
+    ELECTRON_RADIUS = 2.81e-15
+    E_CHARGE = 1.6e-19
+    LASER_WL = 1064.4e-9
+    DEFAULT_M = 100
+    NOISE_LEN = 75
+    T_STEP = 0.325
+
     def __init__(
             self,
             poly_name: int | str,
@@ -21,15 +30,6 @@ class Polychromator:
             spectral_calib: Path | dict = None,
             fe_expected: dict = None,
     ):
-        """
-        :param poly_name: номер полихроматора в стойке!
-        :param fiber_number: номер волокна, 1 - вверх
-        :param caen_time: приведенные по максимуму времена
-        :param caen_data: данные с каена, 5 каналов
-        :param config_connection: конфиг
-        :param absolut_calib:
-        """
-
         self.poly_name = poly_name
         self.fiber_number = fiber_number
         self.z_cm = z_cm
@@ -57,22 +57,13 @@ class Polychromator:
         self.errors_n = []
 
     def get_signal_integrals(
-            self, shots_before_plasma: int = 4, shots_after: int = 17, t_step: float = 0.325
+            self, shots_before_plasma: int = 4, shots_after: int = 17
     ) -> tuple[list, list]:
-        """
-        RETURNS PHE
-        :param shots_before_plasma:
-        :param shots_after:
-        :param t_step:
-        :return:
-        """
-        excess_noise_factor = 3
         all_const = self.gain.resulting_multiplier
-        noise_len = 300
 
         all_shots_signal = []
         all_shots_noise = []
-        for shot in range(1, shots_before_plasma + shots_after):  # 1 пропускаю 0 запуск
+        for shot in range(1, shots_before_plasma + shots_after):
             all_ch_signal = []
             all_ch_noise = []
             for poly_ch in range(self.ch_number):
@@ -85,35 +76,42 @@ class Polychromator:
                     ),
                 ]
 
-                signal_lvl = statistics.median(self.signals[poly_ch][shot][:noise_len])
+                signal_lvl = statistics.median(self.signals[poly_ch][shot][:self.NOISE_LEN])
                 lvl_integral = signal_lvl * (
                         self.config[poly_ch]["sig_RightBord"]
                         - self.config[poly_ch]["sig_LeftBord"]
                 )
                 if poly_ch == 0:
-                    summ_of_ideal_thomson_signal = 24  # взят отнормированный сигнал томсона без шумов
+                    summ_of_ideal_thomson_signal = 24
                     sig_maximum = max(
-                        self.signals[poly_ch][shot][signal_ind[0]: signal_ind[1]])
-                    signal_integral = (sig_maximum - signal_lvl) * summ_of_ideal_thomson_signal * t_step
-
+                        self.signals[poly_ch][shot][signal_ind[0]: signal_ind[1]]
+                    )
+                    signal_integral = (
+                            (sig_maximum - signal_lvl)
+                            * summ_of_ideal_thomson_signal
+                            * self.T_STEP
+                    )
                 else:
                     signal_integral = (
                             sum(self.signals[poly_ch][shot][signal_ind[0]: signal_ind[1]])
-                            * t_step
+                            * self.T_STEP
                             - lvl_integral
                     )
 
                 phe_number = signal_integral * all_const
 
                 noise_track = (
-                                      (statistics.stdev(self.signals[poly_ch][shot][:noise_len]))
-                                      * all_const
-                                      * t_step
-                                      * (signal_ind[1] - signal_ind[0])
-                              ) ** 2
+                        (
+                                statistics.stdev(self.signals[poly_ch][shot][:self.NOISE_LEN])
+                                * all_const
+                                * self.T_STEP
+                                * (signal_ind[1] - signal_ind[0])
+                        )
+                        ** 2
+                )
 
                 if phe_number > 0:
-                    noise_excess = phe_number * excess_noise_factor
+                    noise_excess = phe_number * self.EXCESS_NOISE_FACTOR
                 else:
                     phe_number = 1
                     noise_excess = 0
@@ -126,13 +124,7 @@ class Polychromator:
         return all_shots_signal, all_shots_noise
 
     def get_temperatures(self):
-        """
-        GIVES TEMPERATURE LIST
-        :return:
-        """
-        self.signals_integrals, self.signals_noise_integrals = (
-            self.get_signal_integrals()
-        )
+        self.signals_integrals, self.signals_noise_integrals = self.get_signal_integrals()
         results = []
         for shot_integral, noise in zip(
                 self.signals_integrals, self.signals_noise_integrals
@@ -156,7 +148,9 @@ class Polychromator:
                     for ch in range(self.ch_number):
                         khi += (
                                        shot_integral[ch]
-                                       - sum_1 * (f_e[ch] * self.spectral_calibration[ch]) / sum_2
+                                       - sum_1
+                                       * (f_e[ch] * self.spectral_calibration[ch])
+                                       / sum_2
                                ) ** 2 / noise[ch] ** 2
                     ans.append({T_e: khi})
 
@@ -168,9 +162,6 @@ class Polychromator:
                 self.temperatures.append(T)
 
     def get_density(self, apd_gain: float = 100):
-        electron_radius = 2.81e-15
-        e_charge = 1.6e-19
-
         if not self.temperatures:
             self.get_temperatures()
 
@@ -185,9 +176,8 @@ class Polychromator:
                         * (self.fe_data[T_e][ch] * self.spectral_calibration[ch])
                         / noise_phe[ch] ** 2
                 )
-                sum_divider += (
-                                       self.fe_data[T_e][ch] * self.spectral_calibration[ch]
-                               ) ** 2 / noise_phe[ch] ** 2
+                sum_divider += (self.fe_data[T_e][ch] * self.spectral_calibration[ch]
+                                ) ** 2 / noise_phe[ch] ** 2
 
             self.density.append(
                 str(
@@ -195,9 +185,9 @@ class Polychromator:
                     / (
                             sum_divider
                             * self.laser.laser_energy
-                            * (self.laser.laser_wl / (apd_gain * e_charge))
+                            * (self.laser.laser_wl / (apd_gain * self.E_CHARGE))
                             * self.absolut_calibration
-                            * electron_radius ** 2
+                            * self.ELECTRON_RADIUS ** 2
                     )
                 )
             )
@@ -205,18 +195,12 @@ class Polychromator:
     def get_errors(self):
         ch_nums = self.ch_number
 
-        electron_radius = 2.81e-15
-        laser_wl = 1064.4e-9
-        e_charge = 1.6e-19
-        M = 100
-        laser_energy = self.laser.laser_energy
-
         full_coef = (
                 self.absolut_calibration
-                * laser_energy
-                * electron_radius ** 2
-                * laser_wl
-                / (M * e_charge)
+                * self.laser.laser_energy
+                * self.ELECTRON_RADIUS ** 2
+                * self.LASER_WL
+                / (self.DEFAULT_M * self.E_CHARGE)
         )
 
         for shot_noise, T_e in zip(self.signals_noise_integrals, self.temperatures):
@@ -230,14 +214,15 @@ class Polychromator:
                 sum_fe_derivative_fe_to_noise = 0
                 T_e_step = float(T_e_next) - float(T_e)
                 for ch in range(ch_nums):
-                    derivative_fe = (
-                                            self.fe_data[T_e][ch] - self.fe_data[T_e_next][ch]
-                                    ) / T_e_step
+                    derivative_fe = (self.fe_data[T_e][ch] - self.fe_data[T_e_next][ch]
+                                     ) / T_e_step
 
                     sum_fe_to_noise += (self.fe_data[T_e][ch] / shot_noise[ch]) ** 2
                     sum_derivative_fe_to_noise += (derivative_fe / shot_noise[ch]) ** 2
                     sum_fe_derivative_fe_to_noise += (
-                                                             derivative_fe * self.fe_data[T_e][ch] / shot_noise[ch] ** 2
+                                                             derivative_fe
+                                                             * self.fe_data[T_e][ch]
+                                                             / shot_noise[ch] ** 2
                                                      ) ** 2
 
                 M_errT = sum_fe_to_noise / (
@@ -264,71 +249,13 @@ class Polychromator:
                 self.errors_T.append(0)
                 self.errors_n.append(0)
 
-    def get_expected_phe(self):
-        from_shot = 5
-        to_shot = 20
-
-        electron_radius = 6.6e-29
-        laser_energy = self.laser.laser_energy
-
-        for shot, T_e, n_e in zip(
-                self.signals_integrals[from_shot:to_shot],
-                self.temperatures[from_shot:to_shot],
-                self.density[from_shot:to_shot],
-        ):
-            print("shot_number ", self.signals_noise_integrals.index(shot), end="  ")
-            print(
-                T_e,
-                n_e,
-                "got ",
-                shot[0],
-                "expected",
-                self.absolut_calibration
-                * self.fe_data[T_e][0]
-                * electron_radius
-                * laser_energy
-                * float(n_e),
-                "got",
-                shot[1],
-                "expected",
-                self.absolut_calibration
-                * self.fe_data[T_e][1]
-                * electron_radius
-                * laser_energy
-                * float(n_e),
-            )
-
-    def plot_raw_signals(self, from_shot: int = 10, to_shot: int | str = 20):
-        fig, ax = plt.subplots(nrows=len(self.signals), ncols=1, figsize=(13, 8))
-
-        if int == type(to_shot):
-            pass
-        elif str.lower(to_shot) == "all":
-            to_shot = len(self.signals[0])
-
-        for ch in range(len(self.signals)):
-            for shot in range(from_shot, to_shot):
-                time, signal = self.get_raw_data(shot_num=shot, ch_num=ch)
-                ax[ch].plot(time, signal, label="shot %d" % shot)
-                ax[ch].set_xlim([0, 80])
-        ax[0].legend(ncol=3)
-        plt.subplots_adjust(left=0.05, right=0.95, top=0.96, bottom=0.07)
-        ax[0].set_title(f"{self.poly_name}")
-        plt.show()
-
-    def get_raw_data(self, shot_num: int = None, ch_num: int = None):
-        if ch_num is None and shot_num is None:
-            return self.signals_time, self.signals
-        return self.signals_time[shot_num], self.signals[ch_num][shot_num]
-
     def write_raw_signals(self, path: Path):
-
         path_entry = os.path.join(path, self.poly_name)
         for ch in range(self.ch_number):
             path = path_entry + f"_{ch + 1}channel.csv"
             with open(path, "w") as w_file:
                 for count in range(1024):
-                    string = f"{count * 0.325}, "
+                    string = f"{count * self.T_STEP}, "
                     for shot in self.signals[ch]:
                         string += f"{str(shot[count])}, "
                     w_file.write(string + "\n")
@@ -346,25 +273,25 @@ def built_fibers(
     equatorGain = GainsEquator()
     equator_fe = expected_fe
 
-    laser = LaserNdYag(laser_wl=1064.4e-9, laser_energy=laser_energy)
+    laser = LaserNdYag(laser_wl=Polychromator.LASER_WL, laser_energy=laser_energy)
 
     specs = [
-        ("eqTS_46_G10", 2, -37.1, 1, slice(11, 14), config_connection["equator_caens"][1]["channels"][11:14],
+        ("eqTS_46_G10", 2, -37.1, 1, slice(11, 15), config_connection["equator_caens"][1]["channels"][11:15],
          "eqTS_46_G10"),
 
-        ("eqTS_42_G10", 3, -38.6, 0, slice(1, 4), config_connection["equator_caens"][0]["channels"][1:4],
+        ("eqTS_42_G10", 3, -38.6, 0, slice(1, 5), config_connection["equator_caens"][0]["channels"][1:5],
          "eqTS_42_G10"),
 
-        ("eqTS_47_G10", 4, -39.9, 0, slice(6, 9), config_connection["equator_caens"][0]["channels"][6:9],
+        ("eqTS_47_G10", 4, -39.9, 0, slice(6, 10), config_connection["equator_caens"][0]["channels"][6:10],
          "eqTS_47_G10"),
 
-        ("eqTS_48_G10", 5, -41.0, 0, slice(11, 14), config_connection["equator_caens"][0]["channels"][11:14],
+        ("eqTS_48_G10", 5, -41.0, 0, slice(11, 15), config_connection["equator_caens"][0]["channels"][11:15],
          "eqTS_48_G10"),
 
-        ("eqTS_49_G10", 6, -42.2, 1, slice(1, 4), config_connection["equator_caens"][1]["channels"][1:4],
+        ("eqTS_49_G10", 6, -42.2, 1, slice(1, 5), config_connection["equator_caens"][1]["channels"][1:5],
          "eqTS_49_G10"),
 
-        ("eqTS_50_G10", 7, -43.25, 1, slice(6, 9), config_connection["equator_caens"][1]["channels"][6:9],
+        ("eqTS_50_G10", 7, -43.25, 1, slice(6, 10), config_connection["equator_caens"][1]["channels"][6:10],
          "eqTS_50_G10"),
     ]
 
