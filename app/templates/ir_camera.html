@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-3">
+    <h2 class="mb-3">IR Camera — T(R, t)</h2>
+
+    <div class="card p-3 mb-2">
+        <h6 class="mb-2">Загрузка .txt файла</h6>
+        <form action="/ir_camera/upload" method="post" enctype="multipart/form-data" class="row g-2 mb-1">
+            <div class="col-md-7">
+                <input id="fileInput" type="file" name="file" accept=".txt" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-3">
+                <input id="selectedFilenameDisplay" type="text" class="form-control form-control-sm" readonly
+                       value="{{ filename if filename else 'Файл не выбран' }}">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100 btn-sm" type="submit">Загрузить</button>
+            </div>
+        </form>
+
+        {% if filename %}
+        <div class="mt-2">
+            <input type="hidden" id="init-filename" value="{{ filename }}">
+            {% if times and times|length > 0 %}
+            {% set first = times[0] %}
+            {% set last = times[-1] %}
+            <div class="row g-2 align-items-center mt-1">
+                <div class="col-md-8">
+                    <label class="form-label mb-1">Время (ms)</label>
+                    <input type="range" id="timeSlider" class="form-range"
+                           min="{{ first }}" max="{{ last }}" step="1" value="{{ first }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label mb-1">Текущее</label>
+                    <div id="timeLabel" class="fw-bold">{{ first }} ms</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card p-2 mt-2">
+        <!-- выбор цвета линии и кнопки действий -->
+        <div class="text-end mb-2 d-flex justify-content-end align-items-center gap-2">
+            <label for="lineColorPicker" class="mb-0">Цвет линии:</label>
+            <input type="color" id="lineColorPicker" value="#0000ff">
+
+            <div class="btn-group">
+                <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                    Действия
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" id="savePngBtn">Сохранить PNG</a></li>
+                    <li><a class="dropdown-item" href="#" id="downloadDataBtn">Скачать данные</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="plot" style="background:white; width:100%; height:500px;"></div>
+    </div>
+</div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script>
+    (function() {
+        const fileInput = document.getElementById("fileInput");
+        const filenameDisplay = document.getElementById("selectedFilenameDisplay");
+        if (fileInput && filenameDisplay) {
+            fileInput.addEventListener("change", e => {
+                filenameDisplay.value = e.target.files.length > 0 ? e.target.files[0].name : "Файл не выбран";
+            });
+        }
+
+        const filename = document.getElementById("init-filename")?.value;
+        const slider   = document.getElementById("timeSlider");
+        const label    = document.getElementById("timeLabel");
+        const plotDiv  = document.getElementById("plot");
+        if (!filename || !slider) return;
+
+        // цвет линии
+        const colorPicker = document.getElementById("lineColorPicker");
+        let lineColor = colorPicker?.value || "#0000ff";
+        if (colorPicker) {
+            colorPicker.addEventListener("input", e => {
+                lineColor = e.target.value;
+                draw(slider.value);
+            });
+        }
+
+        // -----------------------------
+        // Draw T(R) curve
+        // -----------------------------
+        function draw(t) {
+            fetch(`/ir_camera/data?filename=${filename}&time_ms=${t}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data || data.error) return;
+
+                    const trace = {
+                        x: data.R,
+                        y: data.T,
+                        mode: 'lines',
+                        line: { color: lineColor, width: 3 },
+                        showlegend: false
+                    };
+
+                    const layout = {
+                        title: { text: `t = ${data.requested_time} ms`, font: { size: 24 } },
+                        xaxis: { title: { text: "R [m]", font: { size: 20 } }, tickfont: { size: 16 }, showgrid: true },
+                        yaxis: { title: { text: "T [°C]", font: { size: 20 } }, tickfont: { size: 16 }, range: [0, 180], autorange: false, showgrid: true },
+                        margin: { l: 70, r: 30, t: 60, b: 60 },
+                        plot_bgcolor: "white",
+                        paper_bgcolor: "white",
+                        autosize: false,
+                        width: plotDiv.clientWidth,
+                        height: plotDiv.clientHeight,
+                        uirevision: 'fixed'
+                    };
+
+                    Plotly.react(plotDiv, [trace], layout, { displayModeBar: true, responsive: true });
+                });
+        }
+
+        slider.addEventListener("input", e => {
+            const t = e.target.value;
+            label.textContent = `${t} ms`;
+            draw(t);
+        });
+
+        // initial draw
+        draw(slider.value);
+
+        // -----------------------------
+        // SAVE PLOT — PNG / DOWNLOAD DATA
+        // -----------------------------
+        const savePngBtn = document.getElementById("savePngBtn");
+        const downloadDataBtn = document.getElementById("downloadDataBtn");
+
+        savePngBtn.addEventListener("click", () => {
+            if (!plotDiv) return;
+
+            Plotly.downloadImage(plotDiv, {
+                format: 'png',
+                filename: `ir_camera_TRT_${slider.value}ms`,
+                width: plotDiv.clientWidth,
+                height: plotDiv.clientHeight,
+                scale: 2
+            });
+        });
+
+        downloadDataBtn.addEventListener("click", () => {
+            if (!plotDiv || !window.Plotly || !Plotly.Plots) return;
+            const gd = plotDiv;
+            const trace = gd.data[0];
+            if (!trace) return;
+
+            let txt = "R[m]\tT[°C]\n";
+            for (let i = 0; i < trace.x.length; i++) {
+                const yErr = trace.error_y?.array?.[i] ?? '';
+                txt += `${trace.x[i]}\t${trace.y[i]}\t${yErr}\n`;
+            }
+
+            const blob = new Blob([txt], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `ir_camera_TRT_${slider.value}ms.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        });
+
+    })();
+</script>
+{% endblock %}

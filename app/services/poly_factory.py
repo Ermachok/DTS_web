@@ -107,9 +107,8 @@ class Polychromator:
                                 * self.T_STEP
                                 * (signal_ind[1] - signal_ind[0])
                         )
-                        ** 2
+                        ** 2 + 0.01
                 )
-
                 if phe_number > 0:
                     noise_excess = phe_number * self.EXCESS_NOISE_FACTOR
                 else:
@@ -192,7 +191,7 @@ class Polychromator:
                 )
             )
 
-    def get_errors(self):
+    def get_errors(self, low_Te_error=4):
         ch_nums = self.ch_number
 
         full_coef = (
@@ -235,13 +234,21 @@ class Polychromator:
                         - sum_fe_derivative_fe_to_noise
                 )
 
-                self.errors_T.append(
-                    str(
-                        math.sqrt(
-                            M_errT / (float(self.density[shot_num]) * full_coef) ** 2
+                if float(T_e) < low_Te_error:
+                    self.errors_T.append(
+                        str(min(low_Te_error,
+                                math.sqrt(
+                                    M_errT / (float(self.density[shot_num]) * full_coef) ** 2)
+                                ))
+                    )
+                else:
+                    self.errors_T.append(
+                        str(
+                            math.sqrt(
+                                M_errT / (float(self.density[shot_num]) * full_coef) ** 2
+                            )
                         )
                     )
-                )
 
                 self.errors_n.append(str(math.sqrt(M_errn / full_coef ** 2)))
 

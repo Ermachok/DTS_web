@@ -49,7 +49,7 @@
     }
 
     /* Plot download controls */
-    .plot-wrapper { position: relative; }
+    .plot-wrapper { position: relative; min-height: 320px; }
 
     /* Hide Plotly modebar by default inside our plot-wrapper.
        The toggle button will show it when requested. */
@@ -130,9 +130,6 @@
                 <label class="form-label">Полихроматор</label>
                 <select id="polySelect" class="form-select"></select>
             </div>
-
-            <!-- Убрали выбор канала: строим сразу каналы 0 и 1 -->
-
             <div class="col-md-3">
                 <label class="form-label">From shot</label>
                 <input id="fromShot" type="number" class="form-control" value="0">
@@ -183,15 +180,67 @@
         {% if has_results %}
         <hr>
         <h4>Результаты расчёта</h4>
+        {% set g = graphs %}
         <div class="row">
-            {% for g in graphs %}
-            <div class="col-md-6 mb-4">
+            {% if g | length >= 3 %}
+            <div class="col-md-4 mb-4">
                 <div class="plot-wrapper">
-                    {{ g | safe }}
+                    {{ g[0] | safe }}
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="plot-wrapper">
+                    {{ g[1] | safe }}
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="plot-wrapper">
+                    {{ g[2] | safe }}
+                </div>
+            </div>
+            {% else %}
+            {% for gg in g %}
+            <div class="col-md-4 mb-4">
+                <div class="plot-wrapper">
+                    {{ gg | safe }}
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+        {% if g | length >= 6 %}
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="plot-wrapper">
+                    {{ g[3] | safe }}
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="plot-wrapper">
+                    {{ g[4] | safe }}
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="plot-wrapper">
+                    {{ g[5] | safe }}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        {% if g | length > 3 %}
+        <div class="row">
+            {% for gg in g[3:] %}
+            <div class="col-md-4 mb-4">
+                <div class="plot-wrapper">
+                    {{ gg | safe }}
                 </div>
             </div>
             {% endfor %}
         </div>
+        {% endif %}
+        {% endif %}
+
         {% endif %}
 
         <div id="rawPlotWrapper" style="width:100%; height:700px;">
@@ -201,236 +250,231 @@
 </div>
 
 <script>
-    // Helpers for compact polychromators
-    function buildGridRows(list) {
-        const total = list.length;
-        const cols = Math.ceil(total / 3) || 1;
-        const rows = [];
-        for (let r = 0; r < 3; r++) {
-            const row = [];
-            for (let c = 0; c < cols; c++) {
-                const idx = c * 3 + r;
-                if (idx < total) row.push(list[idx]);
-                else row.push(null);
-            }
-            rows.push(row);
-        }
-        return rows;
-    }
+    (function() {
 
-    function renderCompactPolychromators(list) {
-        const wrapper = document.getElementById('polyCompactWrapper');
-        const body = document.getElementById('polyCompactBody');
-        if (!list || list.length === 0) {
-            wrapper.style.display = 'none';
-            body.innerHTML = '';
-            return;
-        }
-        wrapper.style.display = 'block';
-        body.innerHTML = '';
-
-        const rows = buildGridRows(list);
-        rows.forEach(row => {
-            const tr = document.createElement('tr');
-            row.forEach(cell => {
-                const td = document.createElement('td');
-                td.className = 'poly-cell';
-                if (cell) {
-                    const spanName = document.createElement('span');
-                    spanName.className = 'poly-name';
-                    spanName.textContent = cell.name || '';
-                    spanName.title = cell.name || '';
-                    const spanZ = document.createElement('span');
-                    spanZ.className = 'poly-z';
-                    spanZ.textContent = (cell.z_cm !== null && cell.z_cm !== undefined) ? (cell.z_cm.toFixed(1) + ' cm') : '-';
-                    td.appendChild(spanName);
-                    td.appendChild(spanZ);
-                } else {
-                    td.innerHTML = '&nbsp;';
+        // -------------------------------
+        // Compact polychromators helpers
+        // -------------------------------
+        function buildGridRows(list) {
+            const total = list.length;
+            const cols = Math.ceil(total / 3) || 1;
+            const rows = [];
+            for (let r = 0; r < 3; r++) {
+                const row = [];
+                for (let c = 0; c < cols; c++) {
+                    const idx = c * 3 + r;
+                    if (idx < total) row.push(list[idx]);
+                    else row.push(null);
                 }
-                tr.appendChild(td);
-            });
-            body.appendChild(tr);
-        });
-    }
-
-    // Adjust position of download controls to avoid overlapping Plotly modebar.
-    function positionDownloadControlRelativeToModebar(wrapper, ctrl) {
-        const modebar = wrapper.querySelector('.modebar') || wrapper.querySelector('.modebar-container');
-        if (!modebar) {
-            ctrl.style.top = '8px';
-            return;
+                rows.push(row);
+            }
+            return rows;
         }
-        const wrapperRect = wrapper.getBoundingClientRect();
-        const modebarRect = modebar.getBoundingClientRect();
-        const topPx = Math.max(6, modebarRect.bottom - wrapperRect.top + 6);
-        ctrl.style.top = topPx + 'px';
-    }
 
-    // Add download controls and "hide/show modebar" toggle
-    function addPlotDownloadControls() {
-      document.querySelectorAll('.plot-wrapper').forEach((wrapper, idx) => {
+        function renderCompactPolychromators(list) {
+            const wrapper = document.getElementById('polyCompactWrapper');
+            const body = document.getElementById('polyCompactBody');
+            if (!list || list.length === 0) {
+                wrapper.style.display = 'none';
+                body.innerHTML = '';
+                return;
+            }
+            wrapper.style.display = 'block';
+            body.innerHTML = '';
+
+            const rows = buildGridRows(list);
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                row.forEach(cell => {
+                    const td = document.createElement('td');
+                    td.className = 'poly-cell';
+                    if (cell) {
+                        const spanName = document.createElement('span');
+                        spanName.className = 'poly-name';
+                        spanName.textContent = cell.name || '';
+                        spanName.title = cell.name || '';
+                        const spanZ = document.createElement('span');
+                        spanZ.className = 'poly-z';
+                        spanZ.textContent = (cell.z_cm !== null && cell.z_cm !== undefined) ? (cell.z_cm.toFixed(1) + ' cm') : '-';
+                        td.appendChild(spanName);
+                        td.appendChild(spanZ);
+                    } else {
+                        td.innerHTML = '&nbsp;';
+                    }
+                    tr.appendChild(td);
+                });
+                body.appendChild(tr);
+            });
+        }
+
+        // -------------------------------
+        // Plotly helpers
+        // -------------------------------
+        function positionDownloadControl(wrapper, ctrl) {
+            ctrl.style.top = '8px';
+            ctrl.style.right = '8px';
+        }
+
+      function addPlotDownloadControls() {
+    document.querySelectorAll('.plot-wrapper').forEach((wrapper, idx) => {
         if (wrapper.querySelector('.plot-download')) return;
 
         const ctrl = document.createElement('div');
         ctrl.className = 'plot-download';
+        ctrl.style.cssText = `
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 30;
+            background: rgba(255,255,255,0.95);
+            border-radius: 6px;
+            padding: 4px;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            font-size: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        `;
 
         const fmtSel = document.createElement('select');
-        ['svg','pdf','png','jpeg'].forEach(fmt => {
-          const o = document.createElement('option'); o.value = fmt; o.textContent = fmt.toUpperCase();
-          fmtSel.appendChild(o);
+        ['png','jpeg','svg','pdf'].forEach(fmt => {
+            const o = document.createElement('option');
+            o.value = fmt;
+            o.textContent = fmt.toUpperCase();
+            fmtSel.appendChild(o);
         });
 
         const scaleSel = document.createElement('select');
         [[1,'1×'],[2,'2×'],[3,'3×']].forEach(s => {
-          const o = document.createElement('option'); o.value = s[0]; o.textContent = s[1];
-          scaleSel.appendChild(o);
+            const o = document.createElement('option');
+            o.value = s[0];
+            o.textContent = s[1];
+            scaleSel.appendChild(o);
         });
 
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.textContent = 'Download';
-        btn.title = 'Download plot in selected format';
+        btn.textContent = 'Скачать график';
+        btn.style.fontSize = '11px';
+        btn.style.padding = '2px 6px';
 
-        const toggleMb = document.createElement('button');
-        toggleMb.type = 'button';
-        toggleMb.className = 'toggle-modebar';
-        // Default text: since modebar is hidden by CSS, show action should be 'Show toolbar'
-        toggleMb.textContent = 'Show toolbar';
-        toggleMb.title = 'Toggle Plotly toolbar visibility';
+        const btnData = document.createElement('button');
+        btnData.type = 'button';
+        btnData.textContent = 'Скачать данные';
+        btnData.style.fontSize = '11px';
+        btnData.style.padding = '2px 6px';
 
         ctrl.appendChild(fmtSel);
         ctrl.appendChild(scaleSel);
         ctrl.appendChild(btn);
-        ctrl.appendChild(toggleMb);
+        ctrl.appendChild(btnData);
 
         wrapper.appendChild(ctrl);
+        positionDownloadControl(wrapper, ctrl);
 
-        positionDownloadControlRelativeToModebar(wrapper, ctrl);
-
-        const obs = new MutationObserver(() => {
-          positionDownloadControlRelativeToModebar(wrapper, ctrl);
-        });
-        obs.observe(wrapper, { childList: true, subtree: true });
-
+        // ---- Download image ----
         btn.addEventListener('click', async () => {
-          const gd = wrapper.querySelector('.js-plotly-plot');
-          if (!gd || !window.Plotly || !Plotly.toImage) {
-            alert('Plotly graph not found or Plotly.toImage not available.');
-            return;
-          }
-
-          const fmt = fmtSel.value;
-          const scale = Number(scaleSel.value) || 1;
-
-          let width = (gd._fullLayout && gd._fullLayout.width) ? gd._fullLayout.width : gd.clientWidth;
-          let height = (gd._fullLayout && gd._fullLayout.height) ? gd._fullLayout.height : gd.clientHeight;
-
-          const opts = {
-            format: fmt,
-            width: Math.round(width * Math.max(1, scale)),
-            height: Math.round(height * Math.max(1, scale)),
-            scale: 1
-          };
-
-          try {
+            const gd = wrapper.querySelector('.js-plotly-plot');
+            if (!gd || !window.Plotly || !Plotly.toImage) return;
+            const fmt = fmtSel.value;
+            const scale = Number(scaleSel.value) || 1;
+            const opts = {
+                format: fmt,
+                width: (gd._fullLayout.width || gd.clientWidth) * scale,
+                height: (gd._fullLayout.height || gd.clientHeight) * scale,
+                scale: 1
+            };
             const dataUrl = await Plotly.toImage(gd, opts);
             const a = document.createElement('a');
+            const safeTitle = (gd._fullLayout && gd._fullLayout.title?.text) ?
+                gd._fullLayout.title.text.replace(/\s+/g,'_').replace(/[^\w\-\.]/g,'') :
+                `plot_${idx+1}`;
             a.href = dataUrl;
-            const safeName = (gd._fullLayout && gd._fullLayout.title && gd._fullLayout.title.text) ?
-                              gd._fullLayout.title.text.replace(/\s+/g,'_').replace(/[^\w\-\.]/g,'') : `plot_${idx+1}`;
-            a.download = `${safeName}.${fmt}`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-          } catch (err) {
-            console.error('Error exporting plot:', err);
-            alert('Error exporting plot. Check console for details.');
-          }
+            a.download = `${safeTitle}.${fmt}`;
+            document.body.appendChild(a); a.click(); a.remove();
         });
 
-        // Toggle modebar visibility using computed style detection
-        toggleMb.addEventListener('click', () => {
-          const modebar = wrapper.querySelector('.modebar') || wrapper.querySelector('.modebar-container');
-          if (!modebar) {
-            alert('Toolbar not found yet.');
-            return;
-          }
-          const computed = window.getComputedStyle(modebar).display;
-          if (computed === 'none') {
-            // show
-            modebar.style.display = '';
-            toggleMb.textContent = 'Hide toolbar';
-          } else {
-            // hide
-            modebar.style.display = 'none';
-            toggleMb.textContent = 'Show toolbar';
-          }
-          positionDownloadControlRelativeToModebar(wrapper, ctrl);
+        // ---- Download data with errors ----
+        btnData.addEventListener('click', () => {
+            const gd = wrapper.querySelector('.js-plotly-plot');
+            if (!gd || !gd.data || gd.data.length===0) return;
+
+            let txt = '';
+            gd.data.forEach((trace, tIdx) => {
+                txt += `# Trace ${tIdx+1}: ${trace.name||'Line'}\n`;
+                txt += 'X\tY\tY_err\n';
+                for(let i=0;i<trace.x.length;i++){
+                    const err = trace.error_y?.array?.[i] ?? '';
+                    txt += `${trace.x[i]}\t${trace.y[i]}\t${err}\n`;
+                }
+                txt += '\n';
+            });
+
+            const blob = new Blob([txt], {type:'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const safeTitle = (gd._fullLayout && gd._fullLayout.title?.text) ?
+                gd._fullLayout.title.text.replace(/\s+/g,'_').replace(/[^\w\-\.]/g,'') :
+                `plot_${idx+1}`;
+            a.href = url;
+            a.download = `${safeTitle}.txt`;
+            document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(url);
         });
 
-        window.addEventListener('resize', () => positionDownloadControlRelativeToModebar(wrapper, ctrl));
-      });
-    }
-
-    function initPlotlyHelpers() {
-      setTimeout(() => {
-        addPlotDownloadControls();
-      }, 600);
-    }
-
-    // -- Event listeners / interactions --
-    document.getElementById("btnRaw").addEventListener("click", async () => {
-        const resp = await fetch("/analytics/raw_options");
-        const data = await resp.json();
-
-        const polySel = document.getElementById("polySelect");
-        polySel.innerHTML = "";
-        const polyNames = Object.keys(data.channels || {});
-        polyNames.forEach(name => {
-            const opt = document.createElement("option");
-            opt.value = name;
-            opt.textContent = name;
-            polySel.appendChild(opt);
-        });
-
-        renderCompactPolychromators(data.polychromators || []);
-
-        document.getElementById("rawControls").style.display = "block";
-        document.getElementById("rawControls").scrollIntoView({ behavior: "smooth", block: "start" });
-
-        // Больше не меняем список каналов при смене полихроматора — каналов выбор нет
+        window.addEventListener('resize',()=>positionDownloadControl(wrapper,ctrl));
     });
+}
 
-    document.getElementById("btnPlotRaw").addEventListener("click", async () => {
-        const formData = new FormData();
-        formData.append("polychromator_name", document.getElementById("polySelect").value);
-        formData.append("from_shot", document.getElementById("fromShot").value);
-        formData.append("to_shot", document.getElementById("toShot").value);
 
-        const resp = await fetch("/analytics/raw_signals", { method: "POST", body: formData });
-        const data = await resp.json();
-
-        const rawDiv = document.getElementById("rawPlot");
-        rawDiv.innerHTML = data.plot_html;
-
-        // Execute embedded Plotly scripts, then add download controls
-        const scripts = rawDiv.getElementsByTagName("script");
-        for (let i = 0; i < scripts.length; i++) {
-            try { eval(scripts[i].innerHTML); } catch(e) { console.error(e); }
+        function initPlotlyHelpers(){
+            setTimeout(()=>addPlotDownloadControls(), 600);
         }
 
-        initPlotlyHelpers();
+        // -------------------------------
+        // Raw signals
+        // -------------------------------
+        document.getElementById("btnRaw").addEventListener("click", async ()=>{
+            const resp = await fetch("/analytics/raw_options");
+            const data = await resp.json();
+            const polySel = document.getElementById("polySelect");
+            polySel.innerHTML = "";
+            Object.keys(data.channels||{}).forEach(name=>{
+                const opt = document.createElement("option");
+                opt.value=name; opt.textContent=name;
+                polySel.appendChild(opt);
+            });
+            renderCompactPolychromators(data.polychromators||[]);
+            document.getElementById("rawControls").style.display="block";
+            document.getElementById("rawControls").scrollIntoView({behavior:"smooth", block:"start"});
+        });
 
-        rawDiv.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+        document.getElementById("btnPlotRaw").addEventListener("click", async ()=>{
+            const formData = new FormData();
+            formData.append("polychromator_name", document.getElementById("polySelect").value);
+            formData.append("from_shot", document.getElementById("fromShot").value);
+            formData.append("to_shot", document.getElementById("toShot").value);
+            const resp = await fetch("/analytics/raw_signals",{method:"POST", body:formData});
+            const data = await resp.json();
+            const rawDiv = document.getElementById("rawPlot");
+            rawDiv.innerHTML = data.plot_html;
+            Array.from(rawDiv.getElementsByTagName("script")).forEach(s=>{try{eval(s.innerHTML)}catch(e){console.error(e)}});
+            initPlotlyHelpers();
+            rawDiv.scrollIntoView({behavior:"smooth", block:"start"});
+        });
 
-    // On page load, ensure controls are added to server-rendered plots and compact table rendered
-    window.addEventListener('DOMContentLoaded', () => {
-        initPlotlyHelpers();
-        {% if polychromators %}
-        renderCompactPolychromators({{ polychromators|tojson }});
-        {% endif %}
-    });
+        // -------------------------------
+        // On page load
+        // -------------------------------
+        window.addEventListener('DOMContentLoaded',()=>{
+            initPlotlyHelpers();
+            {% if polychromators %}
+            renderCompactPolychromators({{ polychromators|tojson }});
+            {% endif %}
+        });
+
+    })();
 </script>
+
+
 {% endblock %}
