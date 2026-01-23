@@ -38,7 +38,7 @@ def make_raw_signals_plot(polychromator, channels=None, from_shot: int = 0, to_s
     if isinstance(channels, int):
         channels = [channels]
 
-    # Проверяем доступность каналов
+
     valid_channels = []
     for ch in channels:
         if isinstance(ch, int) and 0 <= ch < len(signals):
@@ -46,7 +46,7 @@ def make_raw_signals_plot(polychromator, channels=None, from_shot: int = 0, to_s
     if not valid_channels:
         return f"<p>Ни один из каналов {channels} не найден в полихроматоре {polychromator.poly_name}</p>"
 
-    # Количество шотов (берём по первому валидному каналу)
+
     n_shots = len(signals[valid_channels[0]])
 
     if isinstance(to_shot, str) and to_shot.lower() == "all":
@@ -116,10 +116,8 @@ def make_raw_signals_plot(polychromator, channels=None, from_shot: int = 0, to_s
             x=0.5,
             font=dict(size=11),
         ),
-        margin=dict(b=90)  # нижний отступ
+        margin=dict(b=90)
     )
-
-    # Ограничение диапазона X (как было ранее)
     try:
         fig.update_xaxes(range=[20, 70])
     except Exception:

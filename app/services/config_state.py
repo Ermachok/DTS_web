@@ -6,7 +6,7 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 DEFAULT_PATHS = {
     "connections": Path("config/config_connection_11_2025.json"),
-    "absolut_calib": Path("calibrations/absolute/absolute_calib_oct2025_WRONG.json"),
+    "absolut_calib": Path("calibrations/absolute/absolute_calib_jan2026_no_pest.json"),
     "spectral_calib": Path("calibrations/relative/EN_spectral_config_2024_05_14_WRONG.json"),
     "fe_expected": Path("fe_expected/f_expected_equator_june2024.json"),
 }

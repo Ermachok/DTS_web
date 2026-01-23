@@ -2,6 +2,7 @@ import bisect
 import math
 import os.path
 import statistics
+import numpy as np
 from pathlib import Path
 from app.services.diagnostic_utils import GainsEquator, LaserNdYag
 
@@ -100,9 +101,10 @@ class Polychromator:
 
                 phe_number = signal_integral * all_const
 
+                noise_track_mV = [1100 - 1250 + v * 2500/4096 for v in self.signals[poly_ch][shot][:self.NOISE_LEN]]
                 noise_track = (
                         (
-                                statistics.stdev(self.signals[poly_ch][shot][:self.NOISE_LEN])
+                                statistics.stdev(noise_track_mV)
                                 * all_const
                                 * self.T_STEP
                                 * (signal_ind[1] - signal_ind[0])

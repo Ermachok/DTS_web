@@ -1,0 +1,724 @@
+{
+  "equator_caens": [
+    {
+      "caen": 0,
+      "channels": [
+        {
+          "caen_ch": 0,
+          "dtr_fiber": "None",
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "laser",
+          "poly_sp_ch": "None",
+          "sig_LeftBord": 0,
+          "sig_RightBord": 0
+        },
+        {
+          "caen_ch": 1,
+          "dtr_fiber": "None",
+          "pest_LeftBord": 31,
+          "pest_RightBord": 55,
+          "poly": "None",
+          "poly_sp_ch": "None",
+          "sig_LeftBord": 27,
+          "sig_MaxBord": [
+            39,
+            45
+          ],
+          "sig_RightBord": 51
+        },
+        {
+          "caen_ch": 2,
+          "dtr_fiber": 1,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Handmade_G10",
+          "poly_sp_ch": 2,
+          "sig_LeftBord": 27,
+          "sig_MaxBord": [
+            39,
+            42
+          ],
+          "sig_RightBord": 39
+        },
+        {
+          "caen_ch": 3,
+          "dtr_fiber": 1,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Handmade_G10",
+          "poly_sp_ch": 3,
+          "sig_LeftBord": 30,
+          "sig_MaxBord": [
+            39,
+            42
+          ],
+          "sig_RightBord": 50
+        },
+        {
+          "caen_ch": 4,
+          "dtr_fiber": 1,
+          "pest_LeftBord": 42,
+          "pest_RightBord": 56,
+          "poly": "Handmade_G10",
+          "poly_sp_ch": 4,
+          "sig_LeftBord": 34,
+          "sig_MaxBord": [
+            39,
+            42
+          ],
+          "sig_RightBord": 56
+        },
+        {
+          "caen_ch": 5,
+          "dtr_fiber": 1,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Handmade_G10",
+          "poly_sp_ch": 5,
+          "sig_LeftBord": 37,
+          "sig_MaxBord": [
+            39,
+            42
+          ],
+          "sig_RightBord": 47
+        },
+        {
+          "caen_ch": 6,
+          "dtr_fiber": 2,
+          "pest_LeftBord": 35,
+          "pest_RightBord": 53,
+          "poly": "Novosib",
+          "poly_sp_ch": 1,
+          "sig_LeftBord": 23,
+          "sig_MaxBord": [
+            28,
+            38
+          ],
+          "sig_RightBord": 37
+        },
+        {
+          "caen_ch": 7,
+          "dtr_fiber": 2,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Novosib",
+          "poly_sp_ch": 2,
+          "sig_LeftBord": 26,
+          "sig_MaxBord": [
+            41,
+            45
+          ],
+          "sig_RightBord": 40
+        },
+        {
+          "caen_ch": 8,
+          "dtr_fiber": 2,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Novosib",
+          "poly_sp_ch": 3,
+          "sig_LeftBord": 26,
+          "sig_MaxBord": [
+            41,
+            45
+          ],
+          "sig_RightBord": 42
+        },
+        {
+          "caen_ch": 9,
+          "dtr_fiber": 2,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Novosib",
+          "poly_sp_ch": 4,
+          "sig_LeftBord": 32,
+          "sig_MaxBord": [
+            41,
+            45
+          ],
+          "sig_RightBord": 44
+        },
+        {
+          "caen_ch": 10,
+          "dtr_fiber": "None",
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Empty",
+          "poly_sp_ch": "None",
+          "sig_LeftBord": 34,
+          "sig_MaxBord": [
+            41,
+            45
+          ],
+          "sig_RightBord": 46
+        },
+        {
+          "caen_ch": 11,
+          "dtr_fiber": "None",
+          "pest_LeftBord": 37,
+          "pest_RightBord": 45,
+          "poly": "Empty",
+          "poly_sp_ch": "None",
+          "sig_LeftBord": 23,
+          "sig_MaxBord": [
+            41,
+            45
+          ],
+          "sig_RightBord": 36
+        },
+        {
+          "caen_ch": 12,
+          "dtr_fiber": "None",
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Empty",
+          "poly_sp_ch": "None",
+          "sig_LeftBord": 26,
+          "sig_MaxBord": [
+            41,
+            45
+          ],
+          "sig_RightBord": 39
+        },
+        {
+          "caen_ch": 13,
+          "dtr_fiber": "None",
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Empty",
+          "poly_sp_ch": "None",
+          "sig_LeftBord": 29,
+          "sig_MaxBord": [
+            41,
+            45
+          ],
+          "sig_RightBord": 40
+        },
+        {
+          "caen_ch": 14,
+          "dtr_fiber": "None",
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Empty",
+          "poly_sp_ch": "None",
+          "sig_LeftBord": 32,
+          "sig_MaxBord": [
+            41,
+            45
+          ],
+          "sig_RightBord": 42
+        },
+        {
+          "caen_ch": 15,
+          "dtr_fiber": "None",
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Empty",
+          "poly_sp_ch": "None",
+          "sig_LeftBord": 34,
+          "sig_MaxBord": [
+            41,
+            45
+          ],
+          "sig_RightBord": 45
+        }
+      ]
+    },
+    {
+      "caen": 1,
+      "channels": [
+        {
+          "caen_ch": 0,
+          "dtr_fiber": "None",
+          "pest_LeftBord": 0,
+          "pest_RightBord": 1,
+          "poly": "laser",
+          "poly_sp_ch": "None",
+          "sig_LeftBord": 95,
+          "sig_RightBord": 115
+        },
+        {
+          "caen_ch": 1,
+          "dtr_fiber": 5,
+          "pest_LeftBord": 31,
+          "pest_RightBord": 50,
+          "poly": "eqTS_49_G2",
+          "poly_sp_ch": 1,
+          "sig_LeftBord": 24,
+          "sig_RightBord": 36
+        },
+        {
+          "caen_ch": 2,
+          "dtr_fiber": 5,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_49_G2",
+          "poly_sp_ch": 2,
+          "sig_LeftBord": 27,
+          "sig_RightBord": 39
+        },
+        {
+          "caen_ch": 3,
+          "dtr_fiber": 5,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_49_G2",
+          "poly_sp_ch": 3,
+          "sig_LeftBord": 30,
+          "sig_RightBord": 42
+        },
+        {
+          "caen_ch": 4,
+          "dtr_fiber": 5,
+          "pest_LeftBord": 42,
+          "pest_RightBord": 56,
+          "poly": "eqTS_49_G2",
+          "poly_sp_ch": 4,
+          "sig_LeftBord": 34,
+          "sig_RightBord": 43
+        },
+        {
+          "caen_ch": 5,
+          "dtr_fiber": 1,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Handmade_G10",
+          "poly_sp_ch": 1,
+          "sig_LeftBord": 37,
+          "sig_RightBord": 47
+        },
+        {
+          "caen_ch": 6,
+          "dtr_fiber": 6,
+          "pest_LeftBord": 36,
+          "pest_RightBord": 50,
+          "poly": "eqTS_50_G2",
+          "poly_sp_ch": 1,
+          "sig_LeftBord": 23,
+          "sig_RightBord": 38
+        },
+        {
+          "caen_ch": 7,
+          "dtr_fiber": 6,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_50_G2",
+          "poly_sp_ch": 2,
+          "sig_LeftBord": 25,
+          "sig_RightBord": 40
+        },
+        {
+          "caen_ch": 8,
+          "dtr_fiber": 6,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_50_G2",
+          "poly_sp_ch": 3,
+          "sig_LeftBord": 27,
+          "sig_RightBord": 42
+        },
+        {
+          "caen_ch": 9,
+          "dtr_fiber": 6,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_50_G2",
+          "poly_sp_ch": 4,
+          "sig_LeftBord": 29,
+          "sig_RightBord": 44
+        },
+        {
+          "caen_ch": 10,
+          "dtr_fiber": "Not defined",
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Handmade_G10",
+          "poly_sp_ch": "Not defined",
+          "sig_LeftBord": 31,
+          "sig_RightBord": 46
+        },
+        {
+          "caen_ch": 11,
+          "dtr_fiber": 7,
+          "pest_LeftBord": 33,
+          "pest_RightBord": 51,
+          "poly": "T15_34_G10",
+          "poly_sp_ch": 1,
+          "sig_LeftBord": 20,
+          "sig_RightBord": 33
+        },
+        {
+          "caen_ch": 12,
+          "dtr_fiber": 7,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "T15_34_G10",
+          "poly_sp_ch": 2,
+          "sig_LeftBord": 23,
+          "sig_RightBord": 36
+        },
+        {
+          "caen_ch": 13,
+          "dtr_fiber": 7,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "T15_34_G10",
+          "poly_sp_ch": 3,
+          "sig_LeftBord": 25,
+          "sig_RightBord": 37
+        },
+        {
+          "caen_ch": 14,
+          "dtr_fiber": 7,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "T15_34_G10",
+          "poly_sp_ch": 4,
+          "sig_LeftBord": 27,
+          "sig_RightBord": 39
+        },
+        {
+          "caen_ch": 15,
+          "dtr_fiber": "Not defined",
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "Handmade_G10",
+          "poly_sp_ch": "Not defined",
+          "sig_LeftBord": 4,
+          "sig_RightBord": 5
+        }
+      ]
+    },
+    {
+      "caen": 2,
+      "channels": [
+        {
+          "caen_ch": 0,
+          "dtr_fiber": "None",
+          "pest_LeftBord": 0,
+          "pest_RightBord": 1,
+          "poly": "laser",
+          "poly_sp_ch": "None",
+          "sig_LeftBord": 95,
+          "sig_RightBord": 115
+        },
+        {
+          "caen_ch": 1,
+          "dtr_fiber": 2,
+          "pest_LeftBord": 30,
+          "pest_RightBord": 53,
+          "poly": "eqTS_42_G10",
+          "poly_sp_ch": 1,
+          "sig_LeftBord": 24,
+          "sig_RightBord": 35
+        },
+        {
+          "caen_ch": 2,
+          "dtr_fiber": 2,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_42_G10",
+          "poly_sp_ch": 2,
+          "sig_LeftBord": 27,
+          "sig_RightBord": 41
+        },
+        {
+          "caen_ch": 3,
+          "dtr_fiber": 2,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_42_G10",
+          "poly_sp_ch": 3,
+          "sig_LeftBord": 30,
+          "sig_RightBord": 42
+        },
+        {
+          "caen_ch": 4,
+          "dtr_fiber": 2,
+          "pest_LeftBord": 42,
+          "pest_RightBord": 56,
+          "poly": "eqTS_42_G10",
+          "poly_sp_ch": 4,
+          "sig_LeftBord": 34,
+          "sig_RightBord": 43
+        },
+        {
+          "caen_ch": 5,
+          "dtr_fiber": 2,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_42_G10",
+          "poly_sp_ch": 5,
+          "sig_LeftBord": 37,
+          "sig_RightBord": 47
+        },
+        {
+          "caen_ch": 6,
+          "dtr_fiber": 3,
+          "pest_LeftBord": 36,
+          "pest_RightBord": 50,
+          "poly": "eqTS_47_G10",
+          "poly_sp_ch": 1,
+          "sig_LeftBord": 24,
+          "sig_RightBord": 36
+        },
+        {
+          "caen_ch": 7,
+          "dtr_fiber": 3,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_47_G10",
+          "poly_sp_ch": 2,
+          "sig_LeftBord": 27,
+          "sig_RightBord": 40
+        },
+        {
+          "caen_ch": 8,
+          "dtr_fiber": 3,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_47_G10",
+          "poly_sp_ch": 3,
+          "sig_LeftBord": 29,
+          "sig_RightBord": 42
+        },
+        {
+          "caen_ch": 9,
+          "dtr_fiber": 3,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_47_G10",
+          "poly_sp_ch": 4,
+          "sig_LeftBord": 31,
+          "sig_RightBord": 44
+        },
+        {
+          "caen_ch": 10,
+          "dtr_fiber": 3,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_47_G10",
+          "poly_sp_ch": 5,
+          "sig_LeftBord": 31,
+          "sig_RightBord": 46
+        },
+        {
+          "caen_ch": 11,
+          "dtr_fiber": 4,
+          "pest_LeftBord": 33,
+          "pest_RightBord": 51,
+          "poly": "eqTS_48_G10",
+          "poly_sp_ch": 1,
+          "sig_LeftBord": 24,
+          "sig_RightBord": 36
+        },
+        {
+          "caen_ch": 12,
+          "dtr_fiber": 4,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_48_G10",
+          "poly_sp_ch": 2,
+          "sig_LeftBord": 27,
+          "sig_RightBord": 40
+        },
+        {
+          "caen_ch": 13,
+          "dtr_fiber": 4,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_48_G10",
+          "poly_sp_ch": 3,
+          "sig_LeftBord": 30,
+          "sig_RightBord": 43
+        },
+        {
+          "caen_ch": 14,
+          "dtr_fiber": 4,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_48_G10",
+          "poly_sp_ch": 4,
+          "sig_LeftBord": 33,
+          "sig_RightBord": 46
+        },
+        {
+          "caen_ch": 15,
+          "dtr_fiber": 4,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_48_G10",
+          "poly_sp_ch": 5,
+          "sig_LeftBord": 36,
+          "sig_RightBord": 49
+        }
+      ]
+    },
+    {
+      "caen": 3,
+      "channels": [
+        {
+          "caen_ch": 0,
+          "dtr_fiber": "None",
+          "pest_LeftBord": 0,
+          "pest_RightBord": 1,
+          "poly": "laser",
+          "poly_sp_ch": "None",
+          "sig_LeftBord": 95,
+          "sig_RightBord": 115
+        },
+        {
+          "caen_ch": 1,
+          "dtr_fiber": 5,
+          "pest_LeftBord": 37,
+          "pest_RightBord": 50,
+          "poly": "eqTS_49_G10",
+          "poly_sp_ch": 1,
+          "sig_LeftBord": 24.5,
+          "sig_RightBord": 37
+        },
+        {
+          "caen_ch": 2,
+          "dtr_fiber": 5,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_49_G10",
+          "poly_sp_ch": 2,
+          "sig_LeftBord": 27,
+          "sig_RightBord": 39
+        },
+        {
+          "caen_ch": 3,
+          "dtr_fiber": 5,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_49_G10",
+          "poly_sp_ch": 3,
+          "sig_LeftBord": 30,
+          "sig_RightBord": 42
+        },
+        {
+          "caen_ch": 4,
+          "dtr_fiber": 5,
+          "pest_LeftBord": 42,
+          "pest_RightBord": 56,
+          "poly": "eqTS_49_G10",
+          "poly_sp_ch": 4,
+          "sig_LeftBord": 33,
+          "sig_RightBord": 45
+        },
+        {
+          "caen_ch": 5,
+          "dtr_fiber": 5,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_49_G10",
+          "poly_sp_ch": 5,
+          "sig_LeftBord": 36,
+          "sig_RightBord": 49
+        },
+        {
+          "caen_ch": 6,
+          "dtr_fiber": 6,
+          "pest_LeftBord": 37,
+          "pest_RightBord": 50,
+          "poly": "eqTS_50_G10",
+          "poly_sp_ch": 1,
+          "sig_LeftBord": 24,
+          "sig_RightBord": 37
+        },
+        {
+          "caen_ch": 7,
+          "dtr_fiber": 6,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_50_G10",
+          "poly_sp_ch": 2,
+          "sig_LeftBord": 27,
+          "sig_RightBord": 40
+        },
+        {
+          "caen_ch": 8,
+          "dtr_fiber": 6,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_50_G10",
+          "poly_sp_ch": 3,
+          "sig_LeftBord": 30,
+          "sig_RightBord": 42
+        },
+        {
+          "caen_ch": 9,
+          "dtr_fiber": 6,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_50_G10",
+          "poly_sp_ch": 4,
+          "sig_LeftBord": 33,
+          "sig_RightBord": 44
+        },
+        {
+          "caen_ch": 10,
+          "dtr_fiber": 6,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "eqTS_50_G10",
+          "poly_sp_ch": 5,
+          "sig_LeftBord": 31,
+          "sig_RightBord": 46
+        },
+        {
+          "caen_ch": 11,
+          "dtr_fiber": 8,
+          "pest_LeftBord": 31,
+          "pest_RightBord": 51,
+          "poly": "T15_35_G10",
+          "poly_sp_ch": 1,
+          "sig_LeftBord": 20,
+          "sig_RightBord": 31
+        },
+        {
+          "caen_ch": 12,
+          "dtr_fiber": 8,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "T15_35_G10",
+          "poly_sp_ch": 2,
+          "sig_LeftBord": 23,
+          "sig_RightBord": 32
+        },
+        {
+          "caen_ch": 13,
+          "dtr_fiber": 8,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "T15_35_G10",
+          "poly_sp_ch": 3,
+          "sig_LeftBord": 26,
+          "sig_RightBord": 37
+        },
+        {
+          "caen_ch": 14,
+          "dtr_fiber": 8,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "T15_35_G10",
+          "poly_sp_ch": 4,
+          "sig_LeftBord": 29,
+          "sig_RightBord": 40
+        },
+        {
+          "caen_ch": 15,
+          "dtr_fiber": 8,
+          "pest_LeftBord": 0,
+          "pest_RightBord": 0,
+          "poly": "T15_35_G10",
+          "poly_sp_ch": 5,
+          "sig_LeftBord": 32,
+          "sig_RightBord": 43
+        }
+      ]
+    }
+  ]
+}

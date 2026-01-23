@@ -13,7 +13,6 @@ def caen_msg_handler(
     :param processed_shots: количество обработанных выстрелов
     :return:
     """
-    # TODO  пересчет отсчетов в вольты!
 
     times = []
     caen = []
