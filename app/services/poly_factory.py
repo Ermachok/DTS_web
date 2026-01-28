@@ -2,9 +2,9 @@ import bisect
 import math
 import os.path
 import statistics
-import numpy as np
 from pathlib import Path
 from app.services.diagnostic_utils import GainsEquator, LaserNdYag
+from app.services.ophir_data_handler import get_ophir_data
 
 
 class Polychromator:
@@ -12,7 +12,6 @@ class Polychromator:
     EXCESS_NOISE_FACTOR = 3
     ELECTRON_RADIUS = 2.81e-15
     E_CHARGE = 1.6e-19
-    LASER_WL = 1064.4e-9
     DEFAULT_M = 100
     NOISE_LEN = 75
     T_STEP = 0.325
@@ -27,7 +26,7 @@ class Polychromator:
             config_connection=None,
             gains: GainsEquator = None,
             laser: LaserNdYag = None,
-            absolut_calib: Path | dict = None,
+            absolut_calib: Path | dict | float = None,
             spectral_calib: Path | dict = None,
             fe_expected: dict = None,
     ):
@@ -56,6 +55,19 @@ class Polychromator:
 
         self.errors_T = []
         self.errors_n = []
+
+    def _normalize_laser_energy(self):
+        n_shots = len(self.signals_integrals)
+
+        E = self.laser.laser_energy
+
+        if isinstance(E, (int, float)):
+            return [float(E)] * n_shots
+
+        if isinstance(E, (list, tuple)):
+            return list(E)
+
+        raise TypeError("laser_energy must be float or list[float]")
 
     def get_signal_integrals(
             self, shots_before_plasma: int = 4, shots_after: int = 17
@@ -101,7 +113,7 @@ class Polychromator:
 
                 phe_number = signal_integral * all_const
 
-                noise_track_mV = [1100 - 1250 + v * 2500/4096 for v in self.signals[poly_ch][shot][:self.NOISE_LEN]]
+                noise_track_mV = [1100 - 1250 + v * 2500 / 4096 for v in self.signals[poly_ch][shot][:self.NOISE_LEN]]
                 noise_track = (
                         (
                                 statistics.stdev(noise_track_mV)
@@ -162,12 +174,14 @@ class Polychromator:
             for T in sort[0].keys():
                 self.temperatures.append(T)
 
-    def get_density(self, apd_gain: float = 100):
+    def get_density(self):
         if not self.temperatures:
             self.get_temperatures()
 
-        for shot_phe, noise_phe, T_e in zip(
-                self.signals_integrals, self.signals_noise_integrals, self.temperatures
+        laser_energies = self._normalize_laser_energy()
+
+        for shot_phe, noise_phe, T_e, laser_energy in zip(
+                self.signals_integrals, self.signals_noise_integrals, self.temperatures, laser_energies
         ):
             sum_numerator = 0
             sum_divider = 0
@@ -185,8 +199,8 @@ class Polychromator:
                     sum_numerator
                     / (
                             sum_divider
-                            * self.laser.laser_energy
-                            * (self.laser.laser_wl / (apd_gain * self.E_CHARGE))
+                            * laser_energy
+                            * (self.laser.laser_wl / (self.DEFAULT_M * self.E_CHARGE))
                             * self.absolut_calibration
                             * self.ELECTRON_RADIUS ** 2
                     )
@@ -196,15 +210,16 @@ class Polychromator:
     def get_errors(self, low_Te_error=4):
         ch_nums = self.ch_number
 
+        laser_energies = self._normalize_laser_energy()
+
         full_coef = (
                 self.absolut_calibration
-                * self.laser.laser_energy
                 * self.ELECTRON_RADIUS ** 2
-                * self.LASER_WL
+                * self.laser.laser_wl
                 / (self.DEFAULT_M * self.E_CHARGE)
         )
 
-        for shot_noise, T_e in zip(self.signals_noise_integrals, self.temperatures):
+        for shot_noise, T_e, laser_energy  in zip(self.signals_noise_integrals, self.temperatures, laser_energies):
             try:
                 shot_num = self.signals_noise_integrals.index(shot_noise)
                 T_e_ind = self.fe_data["Te_grid"].index(float(T_e))
@@ -252,7 +267,7 @@ class Polychromator:
                         )
                     )
 
-                self.errors_n.append(str(math.sqrt(M_errn / full_coef ** 2)))
+                self.errors_n.append(str(math.sqrt(M_errn / (full_coef ** 2) * laser_energy)))
 
             except (IndexError, ZeroDivisionError, ValueError):
                 self.errors_T.append(0)
@@ -282,8 +297,7 @@ def built_fibers(
     equatorGain = GainsEquator()
     equator_fe = expected_fe
 
-    laser = LaserNdYag(laser_wl=Polychromator.LASER_WL, laser_energy=laser_energy)
-
+    laser = LaserNdYag(laser_wl=1064.4e-9, laser_energy=laser_energy)
     specs = [
         ("eqTS_46_G10", 2, -37.1, 1, slice(11, 15), config_connection["equator_caens"][1]["channels"][11:15],
          "eqTS_46_G10"),

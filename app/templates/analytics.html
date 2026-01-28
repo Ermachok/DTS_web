@@ -1,103 +1,47 @@
 {% extends "base.html" %}
 {% block content %}
+
 <style>
     .poly-compact {
         font-size: 12px;
         line-height: 1;
     }
+
     .poly-compact td, .poly-compact th {
         padding: 4px 8px;
         vertical-align: middle;
         border-top: none;
     }
+
     .poly-compact .poly-cell {
         padding: 6px 10px;
         text-align: left;
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
         gap: 2px;
         min-width: 80px;
         max-width: 240px;
         word-break: break-word;
     }
+
     .poly-compact .poly-name {
-        display: block;
         font-weight: 600;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         max-width: 140px;
     }
+
     .poly-compact .poly-z {
-        display: block;
         font-size: 11px;
         color: #6c757d;
-        margin-top: 0;
-    }
-    .raw-controls-bottom {
-        margin-top: 8px;
-    }
-
-    #btnPlotRaw {
-        white-space: nowrap;
-        min-width: 84px;
-    }
-    @media (max-width: 576px) {
-        .poly-compact td, .poly-compact th { padding: 2px 4px; font-size: 11px; }
-        #btnPlotRaw { white-space: normal; min-width: 0; }
-    }
-
-    /* Plot download controls */
-    .plot-wrapper { position: relative; min-height: 320px; }
-
-    /* Hide Plotly modebar by default inside our plot-wrapper.
-       The toggle button will show it when requested. */
-    .plot-wrapper .modebar,
-    .plot-wrapper .modebar-container {
-      display: none !important;
-    }
-
-    .plot-download {
-      position: absolute;
-      top: 8px;          /* default, will be adjusted if a Plotly modebar exists */
-      right: 8px;
-      z-index: 30;
-      background: rgba(255,255,255,0.92);
-      border-radius: 6px;
-      padding: 6px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      font-size: 12px;
-      transition: opacity .12s ease;
-    }
-    .plot-download select, .plot-download button {
-      font-size: 12px;
-      height: 30px;
-    }
-    .plot-download .toggle-modebar {
-      background: transparent;
-      border: 1px solid #ddd;
-      padding: 4px 6px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 11px;
-      line-height: 1;
-    }
-    .plot-download { opacity: 0.9; }
-    .plot-wrapper:hover .plot-download { opacity: 1; }
-
-    @media print {
-      .plot-download { display: none !important; }
     }
 </style>
 
 <div class="container mt-4">
     <h2>Data Analytics</h2>
 
-    <!-- Загрузка файлов -->
+    <!-- Upload msgpk -->
     <div class="card mb-3 p-3">
         <h5>Загрузка файлов .msgpk</h5>
         <form action="/analytics/upload_msgs" method="post" enctype="multipart/form-data"
@@ -114,16 +58,41 @@
         {% endif %}
     </div>
 
-    <!-- Кнопки действий -->
-    <div class="d-flex justify-content-between mb-3">
-        <form action="/analytics/run_compute" method="post">
-            <button class="btn btn-success">Выполнить расчёт</button>
-        </form>
+    <!-- Run compute + Ophir -->
+    <div class="card mb-3 p-3">
+        <form action="/analytics/run_compute"
+              method="post"
+              enctype="multipart/form-data"
+              class="d-flex flex-wrap align-items-center gap-3">
 
-        <button id="btnRaw" class="btn btn-secondary">Сырые сигналы</button>
+            <button type="submit" class="btn btn-success">
+                Выполнить расчёт
+            </button>
+
+            <div class="form-check">
+                <input class="form-check-input"
+                       type="checkbox"
+                       id="useOphir"
+                       name="use_ophir">
+                <label class="form-check-label" for="useOphir">
+                    Использовать данные Ophir
+                </label>
+            </div>
+
+            <input type="file"
+                   id="ophirFile"
+                   name="ophir_file"
+                   class="form-control"
+                   style="display:none; max-width: 300px;"
+                   accept=".txt,.dat">
+
+            <button type="button" id="btnRaw" class="btn btn-secondary ms-auto">
+                Сырые сигналы
+            </button>
+        </form>
     </div>
 
-    <!-- Панель выбора для сырых сигналов (по нажатию btnRaw появляется) -->
+    <!-- Raw controls -->
     <div id="rawControls" class="card p-3 mb-3" style="display:none;">
         <div class="row g-3">
             <div class="col-md-5">
@@ -136,40 +105,18 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label">To shot</label>
-                <input id="toShot" type="text" class="form-control" value="20">
+                <input id="toShot" type="number" class="form-control" value="20">
             </div>
             <div class="col-auto d-flex align-items-end">
                 <button id="btnPlotRaw" class="btn btn-primary">Построить</button>
             </div>
         </div>
 
-        <!-- Compact polychromators grid -->
-        <div id="polyCompactWrapper" class="raw-controls-bottom" style="display:none;">
-            <small class="text-muted">Список полихроматоров (name / z)</small>
+        <div id="polyCompactWrapper" class="mt-3" style="display:none;">
+            <small class="text-muted">Список полихроматоров</small>
             <div class="table-responsive mt-2">
                 <table class="table table-sm table-borderless poly-compact mb-0">
-                    <tbody id="polyCompactBody">
-                    {% if polychromators %}
-                    {% set total = polychromators|length %}
-                    {% set cols = ((total + 2) // 3) %}
-                    {% for r in range(3) %}
-                    <tr>
-                        {% for c in range(cols) %}
-                        {% set idx = c * 3 + r %}
-                        <td class="poly-cell">
-                            {% if idx < total %}
-                            {% set p = polychromators[idx] %}
-                            <span class="poly-name" title="{{ p.name }}">{{ p.name }}</span>
-                            <span class="poly-z">{{ '%.1f'|format(p.z_cm) if p.z_cm is not none else '-' }} cm</span>
-                            {% else %}
-                            &nbsp;
-                            {% endif %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                    {% endif %}
-                    </tbody>
+                    <tbody id="polyCompactBody"></tbody>
                 </table>
             </div>
         </div>
@@ -180,57 +127,9 @@
         {% if has_results %}
         <hr>
         <h4>Результаты расчёта</h4>
-        {% set g = graphs %}
-        <div class="row">
-            {% if g | length >= 3 %}
-            <div class="col-md-4 mb-4">
-                <div class="plot-wrapper">
-                    {{ g[0] | safe }}
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="plot-wrapper">
-                    {{ g[1] | safe }}
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="plot-wrapper">
-                    {{ g[2] | safe }}
-                </div>
-            </div>
-            {% else %}
-            {% for gg in g %}
-            <div class="col-md-4 mb-4">
-                <div class="plot-wrapper">
-                    {{ gg | safe }}
-                </div>
-            </div>
-            {% endfor %}
-            {% endif %}
-        </div>
 
-        {% if g | length >= 6 %}
         <div class="row">
-            <div class="col-md-4 mb-4">
-                <div class="plot-wrapper">
-                    {{ g[3] | safe }}
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="plot-wrapper">
-                    {{ g[4] | safe }}
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="plot-wrapper">
-                    {{ g[5] | safe }}
-                </div>
-            </div>
-        </div>
-        {% else %}
-        {% if g | length > 3 %}
-        <div class="row">
-            {% for gg in g[3:] %}
+            {% for gg in graphs %}
             <div class="col-md-4 mb-4">
                 <div class="plot-wrapper">
                     {{ gg | safe }}
@@ -238,9 +137,6 @@
             </div>
             {% endfor %}
         </div>
-        {% endif %}
-        {% endif %}
-
         {% endif %}
 
         <div id="rawPlotWrapper" style="width:100%; height:700px;">
@@ -250,231 +146,63 @@
 </div>
 
 <script>
-    (function() {
+    (function () {
 
-        // -------------------------------
-        // Compact polychromators helpers
-        // -------------------------------
-        function buildGridRows(list) {
-            const total = list.length;
-            const cols = Math.ceil(total / 3) || 1;
-            const rows = [];
-            for (let r = 0; r < 3; r++) {
-                const row = [];
-                for (let c = 0; c < cols; c++) {
-                    const idx = c * 3 + r;
-                    if (idx < total) row.push(list[idx]);
-                    else row.push(null);
-                }
-                rows.push(row);
-            }
-            return rows;
-        }
+        const useOphir = document.getElementById("useOphir");
+        const ophirFile = document.getElementById("ophirFile");
 
-        function renderCompactPolychromators(list) {
-            const wrapper = document.getElementById('polyCompactWrapper');
-            const body = document.getElementById('polyCompactBody');
-            if (!list || list.length === 0) {
-                wrapper.style.display = 'none';
-                body.innerHTML = '';
-                return;
-            }
-            wrapper.style.display = 'block';
-            body.innerHTML = '';
-
-            const rows = buildGridRows(list);
-            rows.forEach(row => {
-                const tr = document.createElement('tr');
-                row.forEach(cell => {
-                    const td = document.createElement('td');
-                    td.className = 'poly-cell';
-                    if (cell) {
-                        const spanName = document.createElement('span');
-                        spanName.className = 'poly-name';
-                        spanName.textContent = cell.name || '';
-                        spanName.title = cell.name || '';
-                        const spanZ = document.createElement('span');
-                        spanZ.className = 'poly-z';
-                        spanZ.textContent = (cell.z_cm !== null && cell.z_cm !== undefined) ? (cell.z_cm.toFixed(1) + ' cm') : '-';
-                        td.appendChild(spanName);
-                        td.appendChild(spanZ);
-                    } else {
-                        td.innerHTML = '&nbsp;';
-                    }
-                    tr.appendChild(td);
-                });
-                body.appendChild(tr);
-            });
-        }
-
-        // -------------------------------
-        // Plotly helpers
-        // -------------------------------
-        function positionDownloadControl(wrapper, ctrl) {
-            ctrl.style.top = '8px';
-            ctrl.style.right = '8px';
-        }
-
-      function addPlotDownloadControls() {
-    document.querySelectorAll('.plot-wrapper').forEach((wrapper, idx) => {
-        if (wrapper.querySelector('.plot-download')) return;
-
-        const ctrl = document.createElement('div');
-        ctrl.className = 'plot-download';
-        ctrl.style.cssText = `
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            z-index: 30;
-            background: rgba(255,255,255,0.95);
-            border-radius: 6px;
-            padding: 4px;
-            display: flex;
-            gap: 4px;
-            align-items: center;
-            font-size: 12px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-        `;
-
-        const fmtSel = document.createElement('select');
-        ['png','jpeg','svg','pdf'].forEach(fmt => {
-            const o = document.createElement('option');
-            o.value = fmt;
-            o.textContent = fmt.toUpperCase();
-            fmtSel.appendChild(o);
+        useOphir.addEventListener("change", () => {
+            ophirFile.style.display = useOphir.checked ? "block" : "none";
+            if (!useOphir.checked) ophirFile.value = "";
         });
 
-        const scaleSel = document.createElement('select');
-        [[1,'1×'],[2,'2×'],[3,'3×']].forEach(s => {
-            const o = document.createElement('option');
-            o.value = s[0];
-            o.textContent = s[1];
-            scaleSel.appendChild(o);
-        });
-
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = 'Скачать график';
-        btn.style.fontSize = '11px';
-        btn.style.padding = '2px 6px';
-
-        const btnData = document.createElement('button');
-        btnData.type = 'button';
-        btnData.textContent = 'Скачать данные';
-        btnData.style.fontSize = '11px';
-        btnData.style.padding = '2px 6px';
-
-        ctrl.appendChild(fmtSel);
-        ctrl.appendChild(scaleSel);
-        ctrl.appendChild(btn);
-        ctrl.appendChild(btnData);
-
-        wrapper.appendChild(ctrl);
-        positionDownloadControl(wrapper, ctrl);
-
-        // ---- Download image ----
-        btn.addEventListener('click', async () => {
-            const gd = wrapper.querySelector('.js-plotly-plot');
-            if (!gd || !window.Plotly || !Plotly.toImage) return;
-            const fmt = fmtSel.value;
-            const scale = Number(scaleSel.value) || 1;
-            const opts = {
-                format: fmt,
-                width: (gd._fullLayout.width || gd.clientWidth) * scale,
-                height: (gd._fullLayout.height || gd.clientHeight) * scale,
-                scale: 1
-            };
-            const dataUrl = await Plotly.toImage(gd, opts);
-            const a = document.createElement('a');
-            const safeTitle = (gd._fullLayout && gd._fullLayout.title?.text) ?
-                gd._fullLayout.title.text.replace(/\s+/g,'_').replace(/[^\w\-\.]/g,'') :
-                `plot_${idx+1}`;
-            a.href = dataUrl;
-            a.download = `${safeTitle}.${fmt}`;
-            document.body.appendChild(a); a.click(); a.remove();
-        });
-
-        // ---- Download data with errors ----
-        btnData.addEventListener('click', () => {
-            const gd = wrapper.querySelector('.js-plotly-plot');
-            if (!gd || !gd.data || gd.data.length===0) return;
-
-            let txt = '';
-            gd.data.forEach((trace, tIdx) => {
-                txt += `# Trace ${tIdx+1}: ${trace.name||'Line'}\n`;
-                txt += 'X\tY\tY_err\n';
-                for(let i=0;i<trace.x.length;i++){
-                    const err = trace.error_y?.array?.[i] ?? '';
-                    txt += `${trace.x[i]}\t${trace.y[i]}\t${err}\n`;
-                }
-                txt += '\n';
-            });
-
-            const blob = new Blob([txt], {type:'text/plain'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const safeTitle = (gd._fullLayout && gd._fullLayout.title?.text) ?
-                gd._fullLayout.title.text.replace(/\s+/g,'_').replace(/[^\w\-\.]/g,'') :
-                `plot_${idx+1}`;
-            a.href = url;
-            a.download = `${safeTitle}.txt`;
-            document.body.appendChild(a); a.click(); a.remove();
-            URL.revokeObjectURL(url);
-        });
-
-        window.addEventListener('resize',()=>positionDownloadControl(wrapper,ctrl));
-    });
-}
-
-
-        function initPlotlyHelpers(){
-            setTimeout(()=>addPlotDownloadControls(), 600);
-        }
-
-        // -------------------------------
-        // Raw signals
-        // -------------------------------
-        document.getElementById("btnRaw").addEventListener("click", async ()=>{
+        document.getElementById("btnRaw").addEventListener("click", async () => {
             const resp = await fetch("/analytics/raw_options");
             const data = await resp.json();
+
             const polySel = document.getElementById("polySelect");
             polySel.innerHTML = "";
-            Object.keys(data.channels||{}).forEach(name=>{
+
+            Object.keys(data.channels || {}).forEach(name => {
                 const opt = document.createElement("option");
-                opt.value=name; opt.textContent=name;
+                opt.value = name;
+                opt.textContent = name;
                 polySel.appendChild(opt);
             });
-            renderCompactPolychromators(data.polychromators||[]);
-            document.getElementById("rawControls").style.display="block";
-            document.getElementById("rawControls").scrollIntoView({behavior:"smooth", block:"start"});
+
+            document.getElementById("rawControls").style.display = "block";
+            document.getElementById("rawControls")
+                    .scrollIntoView({behavior: "smooth", block: "start"});
         });
 
-        document.getElementById("btnPlotRaw").addEventListener("click", async ()=>{
-            const formData = new FormData();
-            formData.append("polychromator_name", document.getElementById("polySelect").value);
-            formData.append("from_shot", document.getElementById("fromShot").value);
-            formData.append("to_shot", document.getElementById("toShot").value);
-            const resp = await fetch("/analytics/raw_signals",{method:"POST", body:formData});
+        document.getElementById("btnPlotRaw").addEventListener("click", async () => {
+            const fd = new FormData();
+            fd.append("polychromator_name", polySelect.value);
+            fd.append("from_shot", fromShot.value);
+            fd.append("to_shot", toShot.value);
+
+            const resp = await fetch("/analytics/raw_signals", {
+                method: "POST",
+                body: fd
+            });
+
             const data = await resp.json();
             const rawDiv = document.getElementById("rawPlot");
             rawDiv.innerHTML = data.plot_html;
-            Array.from(rawDiv.getElementsByTagName("script")).forEach(s=>{try{eval(s.innerHTML)}catch(e){console.error(e)}});
-            initPlotlyHelpers();
-            rawDiv.scrollIntoView({behavior:"smooth", block:"start"});
-        });
 
-        // -------------------------------
-        // On page load
-        // -------------------------------
-        window.addEventListener('DOMContentLoaded',()=>{
-            initPlotlyHelpers();
-            {% if polychromators %}
-            renderCompactPolychromators({{ polychromators|tojson }});
-            {% endif %}
+            Array.from(rawDiv.getElementsByTagName("script"))
+                    .forEach(s => {
+                        try {
+                            eval(s.innerHTML);
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    });
+
+            rawDiv.scrollIntoView({behavior: "smooth", block: "start"});
         });
 
     })();
 </script>
-
 
 {% endblock %}

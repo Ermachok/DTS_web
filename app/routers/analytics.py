@@ -1,6 +1,7 @@
 import copy
 
 from fastapi.responses import HTMLResponse, RedirectResponse
+from typing import Optional
 from fastapi import APIRouter, Request, Form, UploadFile, File
 from fastapi.responses import JSONResponse
 from app.dependencies import templates
@@ -10,6 +11,7 @@ from app.services.caen_handler import handle_all_caens
 from app.services.poly_factory import built_fibers, calculate_Te_ne
 from app.services.plot_factory import make_interactive_plots
 from app.services.plots_raw import make_raw_signals_plot
+from app.services.ophir_data_handler import get_ophir_data_from_file
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -131,10 +133,11 @@ async def raw_signals(request: Request,
 
 
 @router.post("/run_compute")
-async def run_compute(request: Request):
-    """
-    Запуск расчёта и построение графиков
-    """
+async def run_compute(
+    request: Request,
+    use_ophir: Optional[bool] = Form(False),
+    ophir_file: Optional[UploadFile] = File(None),
+):
     STATUS["processing"] = True
 
     config = CONFIG_DATA["connections"]
@@ -146,25 +149,34 @@ async def run_compute(request: Request):
     all_caens = experiment_data["caens_data"]
     combiscope_times = experiment_data["combiscope_times"]
 
-    combiscope_times, fibers = built_fibers(config_connection=config,
-                                            all_caens=all_caens,
-                                            combiscope_times=combiscope_times,
-                                            expected_fe=expected_fe,
-                                            spectral_calib=spectral_calibration,
-                                            absolut_calib=absolut_calibration,
-                                            laser_energy=1.5
-                                            )
+
+    if use_ophir and ophir_file is not None:
+        file_bytes = await ophir_file.read()
+        laser_energy = get_ophir_data_from_file(file_bytes)
+    else:
+        laser_energy = 1.5
+
+    combiscope_times, fibers = built_fibers(
+        config_connection=config,
+        all_caens=all_caens,
+        combiscope_times=combiscope_times,
+        expected_fe=expected_fe,
+        spectral_calib=spectral_calibration,
+        absolut_calib=absolut_calibration,
+        laser_energy=laser_energy
+    )
 
     calculate_Te_ne(fibers=fibers)
 
-    # Обновляем кеш полихроматоров для шаблона
     POLYCHROMATORS_CACHE.clear()
     for p in fibers:
-        if not hasattr(p, "poly_name"):
-            continue
-        POLYCHROMATORS_CACHE[p.poly_name] = p
+        if hasattr(p, "poly_name"):
+            POLYCHROMATORS_CACHE[p.poly_name] = p
 
-    plots_html = make_interactive_plots(fibers, combiscope_times=combiscope_times)
+    plots_html = make_interactive_plots(
+        fibers,
+        combiscope_times=combiscope_times
+    )
 
     STATUS.update({
         "processing": False,
@@ -172,11 +184,14 @@ async def run_compute(request: Request):
         "graphs": plots_html,
     })
 
-    context = {
-        "request": request,
-        "has_results": True,
-        "status": STATUS,
-        "graphs": plots_html,
-        "polychromators": _polychromators_list_from_cache(),
-    }
-    return templates.TemplateResponse("analytics.html", context)
+    return templates.TemplateResponse(
+        "analytics.html",
+        {
+            "request": request,
+            "has_results": True,
+            "status": STATUS,
+            "graphs": plots_html,
+            "polychromators": _polychromators_list_from_cache(),
+        }
+    )
+
