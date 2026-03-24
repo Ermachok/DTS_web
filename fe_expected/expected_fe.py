@@ -44,11 +44,11 @@ def read_avalanche_amper(file_path: str) -> Tuple[List[float], List[float]]:
 
 
 def read_avalanche_and_compute_phe(
-        file_path: str,
-        gain: float = DEFAULT_GAIN,
-        h_planck: float = H_PLANCK,
-        c_light: float = C_LIGHT,
-        e_charge: float = E_CHARGE,
+    file_path: str,
+    gain: float = DEFAULT_GAIN,
+    h_planck: float = H_PLANCK,
+    c_light: float = C_LIGHT,
+    e_charge: float = E_CHARGE,
 ) -> Tuple[List[float], List[float]]:
     """
     Read avalanche datasheet and compute quantum yield in phe per photon (without amplification).
@@ -65,12 +65,16 @@ def read_avalanche_and_compute_phe(
         (wavelengths_nm, phe_per_photon)
     """
     wavelengths, amplitudes = read_avalanche_amper(file_path)
-    coef = h_planck * c_light * 1e9 / (e_charge * gain)  # 1e9 to convert m->nm factor used in formula
+    coef = (
+        h_planck * c_light * 1e9 / (e_charge * gain)
+    )  # 1e9 to convert m->nm factor used in formula
     phe = [amp * coef / wl for amp, wl in zip(amplitudes, wavelengths)]
     return wavelengths, phe
 
 
-def read_filters_file(file_path: str, transpose: bool = False) -> Tuple[List[float], List[List[float]]]:
+def read_filters_file(
+    file_path: str, transpose: bool = False
+) -> Tuple[List[float], List[List[float]]]:
     """
     Read filters CSV file. Expected format: each row starts with wavelength (nm) then one or more
     transmission columns (comma separated). Non-parsable lines are skipped.
@@ -146,10 +150,10 @@ def linear_interpolate(x: float, xs: List[float], ys: List[float]) -> float:
 
 
 def spectral_density_selden(
-        temperature_k: float,
-        wl_grid_nm: List[float],
-        theta_deg: float,
-        lambda_0_nm: float,
+    temperature_k: float,
+    wl_grid_nm: List[float],
+    theta_deg: float,
+    lambda_0_nm: float,
 ) -> List[float]:
     """
     Compute spectral density using Selden-like formula (original logic preserved).
@@ -173,26 +177,29 @@ def spectral_density_selden(
         x = (wl_nm / lambda_0_nm) - 1.0
         a_loc = (1 + x) ** 3 * math.sqrt(2 * (1 - math.cos(theta)) * (1 + x) + x * x)
         b_loc = math.sqrt(1 + (x * x) / (2 * (1 - math.cos(theta)) * (1 + x))) - 1
-        c_loc = math.sqrt(alpha / math.pi) * (1 - (15 / (16 * alpha)) + 345 / (512 * alpha * alpha))
+        c_loc = math.sqrt(alpha / math.pi) * (
+            1 - (15 / (16 * alpha)) + 345 / (512 * alpha * alpha)
+        )
         # divide by lambda_0 (in meters) because wl_grid is in nm; lambda_0_nm -> m factor is 1e-9
-        densities.append((c_loc / a_loc) * math.exp(-2 * alpha * b_loc) / (lambda_0_nm * 1e-9))
+        densities.append(
+            (c_loc / a_loc) * math.exp(-2 * alpha * b_loc) / (lambda_0_nm * 1e-9)
+        )
 
     return densities
 
 
 def get_expected_fe(
-        avalanche_path: str,
-        filters_path: str,
-        *,
-        wl_start_nm: float = 800.0,
-        wl_step_nm: float = 0.2,
-        wl_steps: int = 1315,
-        te_start: float = 1.0,
-        te_step: float = 0.2,
-        te_steps: int = 2000,
-        theta_deg: float = 110.0,
-        lambda_0_nm: float = 1064.4,
-        gain: float = DEFAULT_GAIN,
+    avalanche_path: str,
+    filters_path: str,
+    *,
+    wl_start_nm: float = 800.0,
+    wl_step_nm: float = 0.2,
+    wl_steps: int = 1315,
+    te_start: float = 1.0,
+    te_step: float = 0.2,
+    te_steps: int = 2000,
+    theta_deg: float = 110.0,
+    lambda_0_nm: float = 1064.4,
 ) -> Dict:
     """
     Compute filter-integrated responses for a grid of electron temperatures.
@@ -212,12 +219,16 @@ def get_expected_fe(
     te_grid = [te_start + i * te_step for i in range(te_steps)]
 
     # Interpolate detector (avalanche) amplitude to wl_grid
-    detector_interp = [linear_interpolate(wl, avalanche_wl, avalanche_amp) for wl in wl_grid]
+    detector_interp = [
+        linear_interpolate(wl, avalanche_wl, avalanche_amp) for wl in wl_grid
+    ]
 
     # Interpolate filters
     filters_interp: List[List[float]] = []
     for fl in filters_per_filter:
-        filters_interp.append([linear_interpolate(wl, filters_wl, fl) for wl in wl_grid])
+        filters_interp.append(
+            [linear_interpolate(wl, filters_wl, fl) for wl in wl_grid]
+        )
 
     # Precompute spectral densities per temperature lazily inside loop
     result: Dict = {"wl_grid": wl_grid, "te_grid": te_grid}
@@ -231,8 +242,9 @@ def get_expected_fe(
         for filter_trans in filters_interp:
             # since wl_grid is in nm, convert wl to meters inside loop
             integral = 0.0
-            for wavelength_nm, section_val, detector_value, filter_value in zip(wl_grid, section, detector_interp,
-                                                                                filter_trans):
+            for wavelength_nm, section_val, detector_value, filter_value in zip(
+                wl_grid, section, detector_interp, filter_trans
+            ):
                 wavelength_m = wavelength_nm * 1e-9
                 integral += section_val * filter_value * detector_value / wavelength_m
             filter_integrals.append(integral * wl_step_m)
@@ -242,30 +254,34 @@ def get_expected_fe(
 
 
 if __name__ == "__main__":
-    filters_path = r"C:\dev\DTS_web\datasheets\filters_equator.csv"
-    avalanche_path = r"C:\dev\DTS_web\datasheets\aw_hama.csv"
+    filters_path = (
+        r"C:\Users\user\PycharmProjects\DTS_web\datasheets\filters_equator.csv"
+    )
+    avalanche_path = r"C:\Users\user\PycharmProjects\DTS_web\datasheets\aw_hama.csv"
 
-    fe_expected = get_expected_fe(filters_path=filters_path, avalanche_path=avalanche_path)
+    fe_expected = get_expected_fe(
+        filters_path=filters_path, avalanche_path=avalanche_path
+    )
 
-    channels = {
-        f"ch_{ch + 1}": [values[ch] for key, values in fe_expected.items() if key not in {'wl_grid', 'te_grid'}]
-        for ch in range(3)
-    }
-
-    ch1_to_ch2, ch2_to_ch3 = [], []
-
-    for ch1, ch2, ch3 in zip(channels["ch_1"], channels["ch_2"], channels["ch_3"]):
-        ch1_to_ch2.append(ch1 / ch2 if ch2 != 0 else 0.0)
-        ch2_to_ch3.append(ch2 / ch3 if ch3 != 0 else 0.0)
-
-    output_data = {
-        "Temperature (eV)": [round(t, 1) for t in fe_expected["te_grid"]],
-        "Channel 1": channels["ch_1"],
-        "Channel 2": channels["ch_2"],
-        "Channel 3": channels["ch_3"],
-        "Ch1/Ch2": ch1_to_ch2,
-        "Ch2/Ch3": ch2_to_ch3,
-    }
-
-    with open("fe_expected_ch_ratio.json", "w", encoding="utf-8") as f:
-        json.dump(output_data, f, indent=4)
+    # channels = {
+    #     f"ch_{ch + 1}": [values[ch] for key, values in fe_expected.items() if key not in {'wl_grid', 'te_grid'}]
+    #     for ch in range(3)
+    # }
+    #
+    # ch1_to_ch2, ch2_to_ch3 = [], []
+    #
+    # for ch1, ch2, ch3 in zip(channels["ch_1"], channels["ch_2"], channels["ch_3"]):
+    #     ch1_to_ch2.append(ch1 / ch2 if ch2 != 0 else 0.0)
+    #     ch2_to_ch3.append(ch2 / ch3 if ch3 != 0 else 0.0)
+    #
+    # output_data = {
+    #     "Temperature (eV)": [round(t, 1) for t in fe_expected["te_grid"]],
+    #     "Channel 1": channels["ch_1"],
+    #     "Channel 2": channels["ch_2"],
+    #     "Channel 3": channels["ch_3"],
+    #     "Ch1/Ch2": ch1_to_ch2,
+    #     "Ch2/Ch3": ch2_to_ch3,
+    # }
+    #
+    with open("fe_expected_90deg.json", "w", encoding="utf-8") as f:
+        json.dump(fe_expected, f, indent=4)

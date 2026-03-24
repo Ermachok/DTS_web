@@ -30,7 +30,9 @@ def get_available_timestamps_ms(path: str) -> List[float]:
     return [float(t) * 1000.0 for t in times_s]
 
 
-def _get_boundary_vars_for_index(mcc_data: dict, index: int) -> Dict[str, Tuple[List[float], List[float]]]:
+def _get_boundary_vars_for_index(
+    mcc_data: dict, index: int
+) -> Dict[str, Tuple[List[float], List[float]]]:
     """
     Возвращает (r_list, z_list) для сегментов по индексу (сырые значения из файла).
     """
@@ -95,7 +97,10 @@ def get_separatrix_at_time(path: str, time_ms: float) -> Dict:
             pick_idx = idx_left if alpha < 0.5 else idx_right
             pick_seg = seg_left if pick_idx == idx_left else seg_right
             r_pick, z_pick = pick_seg[seg_name]
-            result[seg_name] = {"R": [float(x) / 100.0 for x in r_pick], "Z": [float(x) / 100.0 for x in z_pick]}
+            result[seg_name] = {
+                "R": [float(x) / 100.0 for x in r_pick],
+                "Z": [float(x) / 100.0 for x in z_pick],
+            }
 
     return {
         "body": result["body"],

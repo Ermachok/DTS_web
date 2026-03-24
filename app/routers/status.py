@@ -9,15 +9,17 @@ router = APIRouter(prefix="/status", tags=["status"])
 
 @router.get("/", response_class=HTMLResponse)
 async def status_page(request: Request):
-    return templates.TemplateResponse("status.html", {"request": request, "status": STATUS})
+    return templates.TemplateResponse(
+        "status.html", {"request": request, "status": STATUS}
+    )
 
 
 @router.post("/upload_config")
 async def upload_config(
-        absolut_calib: UploadFile | None = None,
-        spectral_calib: UploadFile | None = None,
-        fe_expected: UploadFile | None = None,
-        connections_json: UploadFile | None = None,
+    absolut_calib: UploadFile | None = None,
+    spectral_calib: UploadFile | None = None,
+    fe_expected: UploadFile | None = None,
+    connections_json: UploadFile | None = None,
 ):
     files = {
         "absolut_calib": absolut_calib,

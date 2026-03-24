@@ -5,7 +5,6 @@ from app.services import separatrix_data_handler as separatrix_service
 from app.services.plot_factory import plot_separatrix_to_html
 import os
 
-
 router = APIRouter(prefix="/separatrix", tags=["separatrix"])
 
 
@@ -56,21 +55,29 @@ async def upload_separatrix(file: UploadFile = File(...)):
         return RedirectResponse(url="/separatrix", status_code=303)
 
     saved_path = separatrix_service.save_uploaded_file(file, file.filename)
-    return RedirectResponse(url=f"/separatrix?filename={file.filename}", status_code=303)
+    return RedirectResponse(
+        url=f"/separatrix?filename={file.filename}", status_code=303
+    )
 
 
 @router.post("/view", name="separatrix.view")
-async def view_separatrix(request: Request,
-                          filename: str = Form(...),
-                          time_ms: float = Form(...)):
+async def view_separatrix(
+    request: Request, filename: str = Form(...), time_ms: float = Form(...)
+):
     """
     Генерирует график для выбранного времени и рендерит страницу с plot_html.
     Оставляем для совместимости / серверного построения.
     """
     path = os.path.join(separatrix_service.UPLOAD_DIR, filename)
     if not os.path.exists(path):
-        ctx = {"request": request, "filename": "", "times_ms": [], "plot_html": "", "status": "Файл не найден",
-               "time_step": 1}
+        ctx = {
+            "request": request,
+            "filename": "",
+            "times_ms": [],
+            "plot_html": "",
+            "status": "Файл не найден",
+            "time_step": 1,
+        }
         return templates.TemplateResponse("separatrix.html", ctx)
 
     try:
@@ -97,8 +104,14 @@ async def view_separatrix(request: Request,
         }
         return templates.TemplateResponse("separatrix.html", ctx)
     except Exception as e:
-        ctx = {"request": request, "filename": filename, "times_ms": [], "plot_html": "", "status": f"Ошибка: {e}",
-               "time_step": 1}
+        ctx = {
+            "request": request,
+            "filename": filename,
+            "times_ms": [],
+            "plot_html": "",
+            "status": f"Ошибка: {e}",
+            "time_step": 1,
+        }
         return templates.TemplateResponse("separatrix.html", ctx)
 
 

@@ -2,7 +2,7 @@ import math
 
 
 def spect_dens_selden(
-        temperature: float, wl_grid: list, theta_deg: float, lambda_0: float
+    temperature: float, wl_grid: list, theta_deg: float, lambda_0: float
 ) -> list:
     # деление на lambda_0 - нормировка интеграла при переходе к нужной длине волны
 
@@ -21,7 +21,7 @@ def spect_dens_selden(
         )
         b_loc = math.sqrt(1 + x * x / (2 * (1 - math.cos(theta)) * (1 + x))) - 1
         c_loc = math.sqrt(alpha / math.pi) * (
-                1 - (15 / (16 * alpha)) + 345 / (512 * alpha * alpha)
+            1 - (15 / (16 * alpha)) + 345 / (512 * alpha * alpha)
         )
         section.append(
             (c_loc / a_loc) * math.exp(-2 * alpha * b_loc) / (lambda_0 * 1e-9)

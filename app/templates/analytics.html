@@ -41,7 +41,7 @@
 <div class="container mt-4">
     <h2>Data Analytics</h2>
 
-    <!-- Upload msgpk -->
+
     <div class="card mb-3 p-3">
         <h5>Загрузка файлов .msgpk</h5>
         <form action="/analytics/upload_msgs" method="post" enctype="multipart/form-data"
@@ -58,7 +58,7 @@
         {% endif %}
     </div>
 
-    <!-- Run compute + Ophir -->
+
     <div class="card mb-3 p-3">
         <form action="/analytics/run_compute"
               method="post"
@@ -92,7 +92,7 @@
         </form>
     </div>
 
-    <!-- Raw controls -->
+
     <div id="rawControls" class="card p-3 mb-3" style="display:none;">
         <div class="row g-3">
             <div class="col-md-5">
@@ -122,7 +122,7 @@
         </div>
     </div>
 
-    <!-- Plots -->
+
     <div id="plotContainer">
         {% if has_results %}
         <hr>

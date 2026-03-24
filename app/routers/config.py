@@ -5,7 +5,7 @@ from app.services.config_manager import (
     load_ini_config,
     save_ini_config,
     load_json_config,
-    save_json_config
+    save_json_config,
 )
 from pathlib import Path
 import json
@@ -22,15 +22,15 @@ async def config_main(request: Request):
     json_data = load_json_config(JSON_PATH)
     return templates.TemplateResponse(
         "config.html",
-        {"request": request, "ini_data": ini_data, "json_data": json_data}
+        {"request": request, "ini_data": ini_data, "json_data": json_data},
     )
 
 
 @router.post("/update_ini")
 async def update_ini(
-        section: str = Form(...),
-        key: str = Form(...),
-        value: str = Form(...),
+    section: str = Form(...),
+    key: str = Form(...),
+    value: str = Form(...),
 ):
     ini_data = load_ini_config(INI_PATH)
     if section in ini_data and key in ini_data[section]:
@@ -50,10 +50,7 @@ async def update_json(content: str = Form(...)):
 
 
 @router.post("/save_as_json")
-async def save_as_json(
-        content: str = Form(...),
-        filename: str = Form(...)
-):
+async def save_as_json(content: str = Form(...), filename: str = Form(...)):
     if not filename.strip():
         return await update_json(content)
 
@@ -61,8 +58,8 @@ async def save_as_json(
         parsed = json.loads(content)
 
         filename = filename.strip()
-        if not filename.endswith('.json'):
-            filename += '.json'
+        if not filename.endswith(".json"):
+            filename += ".json"
 
         config_dir = Path("config")
         config_dir.mkdir(exist_ok=True)
@@ -82,14 +79,20 @@ async def save_as_json(
 
 @router.get("/laser")
 async def laser_page(request: Request):
-    return templates.TemplateResponse("config.html", {"request": request, "page": "laser"})
+    return templates.TemplateResponse(
+        "config.html", {"request": request, "page": "laser"}
+    )
 
 
 @router.get("/polychromators")
 async def polychromators_page(request: Request):
-    return templates.TemplateResponse("config.html", {"request": request, "page": "polychromators"})
+    return templates.TemplateResponse(
+        "config.html", {"request": request, "page": "polychromators"}
+    )
 
 
 @router.get("/caen")
 async def caen_page(request: Request):
-    return templates.TemplateResponse("config.html", {"request": request, "page": "caen"})
+    return templates.TemplateResponse(
+        "config.html", {"request": request, "page": "caen"}
+    )

@@ -24,7 +24,9 @@ DEFAULT_LAMBDA0_NM = 1064.4  # nm - default central/reference wavelength
 E_CHARGE = 1.602176634e-19  # Coulombs
 
 
-def parse_filters_file_bytes(content_bytes: bytes) -> Tuple[List[float], List[List[float]]]:
+def parse_filters_file_bytes(
+    content_bytes: bytes,
+) -> Tuple[List[float], List[List[float]]]:
     content = content_bytes.decode("utf-8", errors="replace")
     if content.startswith("\ufeff"):
         content = content.lstrip("\ufeff")
@@ -37,7 +39,9 @@ def parse_filters_file_bytes(content_bytes: bytes) -> Tuple[List[float], List[Li
         line = raw_line.strip()
         if not line:
             continue
-        parts = [p.strip() for p in line.replace(";", ",").split(",") if p.strip() != ""]
+        parts = [
+            p.strip() for p in line.replace(";", ",").split(",") if p.strip() != ""
+        ]
         if len(parts) < 2:
             continue
         try:
@@ -137,8 +141,12 @@ async def load_default():
     success, msg = load_filters_from_path(DEFAULT_FILTERS_PATH)
     if not success:
         return JSONResponse({"ok": False, "error": msg}, status_code=400)
-    return {"ok": True, "wl_count": len(FILTERS_CACHE.get("wl", [])), "channels": FILTERS_CACHE.get("ncols", 0),
-            "msg": msg}
+    return {
+        "ok": True,
+        "wl_count": len(FILTERS_CACHE.get("wl", [])),
+        "channels": FILTERS_CACHE.get("ncols", 0),
+        "msg": msg,
+    }
 
 
 @router.post("/upload_filters")
@@ -146,15 +154,23 @@ async def upload_filters(file: UploadFile = File(...)):
     try:
         content = await file.read()
     except Exception as exc:
-        return JSONResponse({"ok": False, "error": f"Failed to read uploaded file: {exc}"}, status_code=400)
+        return JSONResponse(
+            {"ok": False, "error": f"Failed to read uploaded file: {exc}"},
+            status_code=400,
+        )
 
     try:
         wl, channels = parse_filters_file_bytes(content)
     except Exception as exc:
-        return JSONResponse({"ok": False, "error": f"Parsing error: {exc}"}, status_code=422)
+        return JSONResponse(
+            {"ok": False, "error": f"Parsing error: {exc}"}, status_code=422
+        )
 
     if not wl or not channels:
-        return JSONResponse({"ok": False, "error": "No valid data found in uploaded file"}, status_code=422)
+        return JSONResponse(
+            {"ok": False, "error": "No valid data found in uploaded file"},
+            status_code=422,
+        )
 
     set_filters_cache(wl, channels)
     return {"ok": True, "wl_count": len(wl), "channels": len(channels)}
@@ -162,12 +178,14 @@ async def upload_filters(file: UploadFile = File(...)):
 
 @router.post("/plot_section")
 async def plot_section(
-        te_eV: float = Form(...),
-        theta_deg: float = Form(90.0),
-        lambda_0_nm: Optional[float] = Form(None),
+    te_eV: float = Form(...),
+    theta_deg: float = Form(90.0),
+    lambda_0_nm: Optional[float] = Form(None),
 ):
     if not has_filters():
-        return JSONResponse({"ok": False, "error": "No filters uploaded"}, status_code=400)
+        return JSONResponse(
+            {"ok": False, "error": "No filters uploaded"}, status_code=400
+        )
 
     wl, channels = get_filters()
 
@@ -177,12 +195,16 @@ async def plot_section(
         else:
             lambda_0 = float(lambda_0_nm)
     except Exception as exc:
-        return JSONResponse({"ok": False, "error": f"Invalid lambda_0 value: {exc}"}, status_code=400)
+        return JSONResponse(
+            {"ok": False, "error": f"Invalid lambda_0 value: {exc}"}, status_code=400
+        )
 
     try:
         te_val = float(te_eV)
     except Exception:
-        return JSONResponse({"ok": False, "error": "Invalid T_e value"}, status_code=400)
+        return JSONResponse(
+            {"ok": False, "error": "Invalid T_e value"}, status_code=400
+        )
 
     try:
         densities = spect_dens_selden(
@@ -195,14 +217,25 @@ async def plot_section(
         try:
             densities = spect_dens_selden(te_val, wl, float(theta_deg), lambda_0)
         except Exception as exc:
-            return JSONResponse({"ok": False, "error": f"Error computing spectral density: {exc}"}, status_code=500)
+            return JSONResponse(
+                {"ok": False, "error": f"Error computing spectral density: {exc}"},
+                status_code=500,
+            )
     except Exception as exc:
-        return JSONResponse({"ok": False, "error": f"Error computing spectral density: {exc}"}, status_code=500)
+        return JSONResponse(
+            {"ok": False, "error": f"Error computing spectral density: {exc}"},
+            status_code=500,
+        )
 
     indices = [i for i, w in enumerate(wl) if w >= PLOT_MIN_WL]
     if not indices:
-        return JSONResponse({"ok": False, "error": f"No wavelengths >= {PLOT_MIN_WL} nm in uploaded data"},
-                            status_code=400)
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": f"No wavelengths >= {PLOT_MIN_WL} nm in uploaded data",
+            },
+            status_code=400,
+        )
 
     wl_filtered = [wl[i] for i in indices]
     density_filtered = [densities[i] for i in indices]

@@ -53,19 +53,23 @@ async def save_msg_files(msg_files: list[UploadFile]):
 
 
 def clear_configs():
-    CONFIG_DATA.update({
-        "absolut_calib": None,
-        "spectral_calib": None,
-        "fe_expected": None,
-        "connections": None,
-        "msg_files": [],
-    })
-    STATUS.update({
-        "absolut_calib_file": None,
-        "spectral_calib_file": None,
-        "fe_expected_file": None,
-        "connections_file": None,
-        "msgpk_count": 0,
-        "processing": False,
-        "ready": False,
-    })
+    CONFIG_DATA.update(
+        {
+            "absolut_calib": None,
+            "spectral_calib": None,
+            "fe_expected": None,
+            "connections": None,
+            "msg_files": [],
+        }
+    )
+    STATUS.update(
+        {
+            "absolut_calib_file": None,
+            "spectral_calib_file": None,
+            "fe_expected_file": None,
+            "connections_file": None,
+            "msgpk_count": 0,
+            "processing": False,
+            "ready": False,
+        }
+    )

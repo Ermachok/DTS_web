@@ -86,6 +86,3 @@ class LaserNdYag:
     def __init__(self, laser_wl: float, laser_energy: float | list[float]):
         self.laser_wl = laser_wl
         self.laser_energy = laser_energy
-
-
-

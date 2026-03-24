@@ -14,7 +14,7 @@ router = APIRouter(prefix="/laser", tags=["laser"])
 is_listening = False
 udp_thread = None
 web_messages = []
-laser_ip = ('192.168.10.110', 4001)
+laser_ip = ("192.168.10.110", 4001)
 
 
 def add_message(message):
@@ -38,7 +38,7 @@ def udp_listener():
         ready_to_read, _, _ = select.select([sock], [], [], 0.5)
         if ready_to_read:
             data, addr = sock.recvfrom(8)
-            packet_value = int.from_bytes(data, 'big')
+            packet_value = int.from_bytes(data, "big")
 
             if packet_value == 255:
                 add_message(f"Пойман пакет TOKAMAK START (255) от {addr[0]}")
@@ -46,7 +46,6 @@ def udp_listener():
                 time.sleep(1)
                 laser.disarm(laser_ip)
                 add_message(f"Laser off")
-
 
             elif packet_value == 127:
                 add_message(f"Пойман пакет TOKAMAK COUNTDOWN (127) от {addr[0]}")
@@ -64,10 +63,9 @@ def udp_listener():
 
 @router.get("/", response_class=HTMLResponse)
 async def laser_control_page(request: Request):
-    return templates.TemplateResponse("laser.html", {
-        "request": request,
-        "messages": web_messages
-    })
+    return templates.TemplateResponse(
+        "laser.html", {"request": request, "messages": web_messages}
+    )
 
 
 @router.get("/messages")
@@ -82,7 +80,7 @@ async def arm_laser():
     add_message("ARM send")
     await asyncio.sleep(3)
     laser.start(laser_ip)
-    add_message('START send')
+    add_message("START send")
 
     return JSONResponse({"status": "success", "message": "Laser armed"})
 
@@ -93,7 +91,7 @@ async def disarm_laser():
     laser.stop(laser_ip)
     await asyncio.sleep(1)
     laser.disarm(laser_ip)
-    add_message('LASER disarmed')
+    add_message("LASER disarmed")
     return JSONResponse({"status": "success", "message": "Laser disarmed"})
 
 
@@ -118,7 +116,9 @@ async def toggle_ready(ready: bool = Form(...)):
         udp_thread = threading.Thread(target=udp_listener)
         udp_thread.start()
         add_message("Ready mode ON - Listening for UDP packets")
-        return JSONResponse({"status": "success", "message": "Ready - Listening UDP port 8888"})
+        return JSONResponse(
+            {"status": "success", "message": "Ready - Listening UDP port 8888"}
+        )
     else:
         is_listening = False
         if udp_thread:

@@ -1,8 +1,12 @@
 import os
 
 
-def get_ophir_data(ophir_path: str, ophir_shot_name: str, lines_indent: int = 36,
-                   ophir_to_J: float = 0.0275) -> list:
+def get_ophir_data(
+    ophir_path: str,
+    ophir_shot_name: str,
+    lines_indent: int = 36,
+    ophir_to_J: float = 0.0275,
+) -> list:
     for file in os.listdir(ophir_path):
         if file.endswith(ophir_shot_name):
             with open(rf"{ophir_path}\{file}", "r") as ophir_file:
@@ -17,9 +21,7 @@ def get_ophir_data(ophir_path: str, ophir_shot_name: str, lines_indent: int = 36
 
 
 def get_ophir_data_from_file(
-    file_bytes: bytes,
-    lines_indent: int = 36,
-    ophir_to_J: float = 0.0275
+    file_bytes: bytes, lines_indent: int = 36, ophir_to_J: float = 0.0275
 ) -> list[float]:
 
     text = file_bytes.decode("utf-8", errors="ignore")

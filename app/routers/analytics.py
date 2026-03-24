@@ -92,7 +92,7 @@ async def get_raw_options():
         expected_fe=expected_fe,
         spectral_calib=spectral_calibration,
         absolut_calib=absolut_calibration,
-        laser_energy=1.5
+        laser_energy=1.5,
     )
 
     COMBISCOPE_TIMES_CACHE = copy.deepcopy(combiscope_times)
@@ -111,10 +111,12 @@ async def get_raw_options():
 
 
 @router.post("/raw_signals")
-async def raw_signals(request: Request,
-                      polychromator_name: str = Form(...),
-                      from_shot: int = Form(...),
-                      to_shot: str = Form(...)):
+async def raw_signals(
+    request: Request,
+    polychromator_name: str = Form(...),
+    from_shot: int = Form(...),
+    to_shot: str = Form(...),
+):
     """
     Возвращает HTML-график сырых сигналов выбранного полихроматора.
     По умолчанию строит каналы 0 и 1 (один над другим).
@@ -127,8 +129,13 @@ async def raw_signals(request: Request,
     to_shot_param = int(to_shot) if to_shot.isdigit() else to_shot
 
     # Строим каналы 0 и 1
-    html = make_raw_signals_plot(poly, channels=[0, 1], from_shot=from_shot, to_shot=to_shot_param,
-                                 combiscope_times=COMBISCOPE_TIMES_CACHE)
+    html = make_raw_signals_plot(
+        poly,
+        channels=[0, 1],
+        from_shot=from_shot,
+        to_shot=to_shot_param,
+        combiscope_times=COMBISCOPE_TIMES_CACHE,
+    )
     return {"plot_html": html}
 
 
@@ -149,7 +156,6 @@ async def run_compute(
     all_caens = experiment_data["caens_data"]
     combiscope_times = experiment_data["combiscope_times"]
 
-
     if use_ophir and ophir_file is not None:
         file_bytes = await ophir_file.read()
         laser_energy = get_ophir_data_from_file(file_bytes)
@@ -163,7 +169,7 @@ async def run_compute(
         expected_fe=expected_fe,
         spectral_calib=spectral_calibration,
         absolut_calib=absolut_calibration,
-        laser_energy=laser_energy
+        laser_energy=laser_energy,
     )
 
     calculate_Te_ne(fibers=fibers)
@@ -173,16 +179,15 @@ async def run_compute(
         if hasattr(p, "poly_name"):
             POLYCHROMATORS_CACHE[p.poly_name] = p
 
-    plots_html = make_interactive_plots(
-        fibers,
-        combiscope_times=combiscope_times
-    )
+    plots_html = make_interactive_plots(fibers, combiscope_times=combiscope_times)
 
-    STATUS.update({
-        "processing": False,
-        "ready": True,
-        "graphs": plots_html,
-    })
+    STATUS.update(
+        {
+            "processing": False,
+            "ready": True,
+            "graphs": plots_html,
+        }
+    )
 
     return templates.TemplateResponse(
         "analytics.html",
@@ -192,6 +197,5 @@ async def run_compute(
             "status": STATUS,
             "graphs": plots_html,
             "polychromators": _polychromators_list_from_cache(),
-        }
+        },
     )
-

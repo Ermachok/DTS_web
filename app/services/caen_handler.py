@@ -3,7 +3,7 @@ import msgpack
 
 
 def caen_msg_handler(
-        path, t_step=0.325, time_shift=100, processed_shots: int | str = 30
+    path, t_step=0.325, time_shift=100, processed_shots: int | str = 30
 ):
     """
     :param time_shift: сдвиг для построения в одной системе координат
@@ -41,7 +41,9 @@ def caen_msg_handler(
     return combiscope_times[1:], times, caen  # [1:] - первый нулевой запуск опускаю
 
 
-def handle_all_caens(path: Path = "uploads/msg_pkgs", processed_shots: int | str = 30) -> (list, list):
+def handle_all_caens(
+    path: Path = "uploads/msg_pkgs", processed_shots: int | str = 30
+) -> (list, list):
     msg_files_num_x10 = [6, 7]
 
     all_caens = []

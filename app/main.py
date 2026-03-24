@@ -1,7 +1,15 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from app.services.config_state import auto_load_configs
-from app.routers import status, analytics, config, laser, analysis, separatrix, ir_camera
+from app.routers import (
+    status,
+    analytics,
+    config,
+    laser,
+    analysis,
+    separatrix,
+    ir_camera,
+)
 from dotenv import load_dotenv
 
 load_dotenv()
