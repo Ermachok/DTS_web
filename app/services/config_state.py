@@ -5,9 +5,9 @@ UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 DEFAULT_PATHS = {
-    "connections": Path("config/config_connection_11_2025.json"),
-    "absolut_calib": Path("calibrations/absolute/absolute_calib_jan2026_no_pest.json"),
-    "spectral_calib": Path("calibrations/relative/EN_spectral_config_2024_05_14_WRONG.json"),
+    "connections": Path("config/config_connection_03_2026.json"),
+    "absolut_calib": Path("calibrations/absolute/absolute_calib_jan2026_no_pest_for03_2026_wrong.json"),
+    "spectral_calib": Path("calibrations/relative/EN_spectral_config_2026_03_WRONG.json"),
     "fe_expected": Path("fe_expected/f_expected_equator_june2024.json"),
 }
 

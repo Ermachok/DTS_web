@@ -29,7 +29,7 @@ def udp_listener():
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sock.bind(("192.168.10.108", 8888))
+    sock.bind(("192.168.10.84", 8888))
     sock.setblocking(False)
 
     add_message("UDP listener started on port 8888")

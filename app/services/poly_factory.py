@@ -299,7 +299,7 @@ def built_fibers(
 
     laser = LaserNdYag(laser_wl=1064.4e-9, laser_energy=laser_energy)
     specs = [
-        ("eqTS_46_G10", 2, -37.1, 1, slice(11, 15), config_connection["equator_caens"][1]["channels"][11:15],
+        ("eqTS_46_G10", 2, -37.1, 1, slice(6, 10), config_connection["equator_caens"][1]["channels"][6:10],
          "eqTS_46_G10"),
 
         ("eqTS_42_G10", 3, -38.6, 0, slice(1, 5), config_connection["equator_caens"][0]["channels"][1:5],
@@ -314,7 +314,7 @@ def built_fibers(
         ("eqTS_49_G10", 6, -42.2, 1, slice(1, 5), config_connection["equator_caens"][1]["channels"][1:5],
          "eqTS_49_G10"),
 
-        ("eqTS_50_G10", 7, -43.25, 1, slice(6, 10), config_connection["equator_caens"][1]["channels"][6:10],
+        ("eqTS_51_G10", 7, -43.25, 1, slice(11, 15), config_connection["equator_caens"][1]["channels"][11:15],
          "eqTS_50_G10"),
     ]
 
